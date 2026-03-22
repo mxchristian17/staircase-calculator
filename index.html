@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Escalera</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+
+    :root {
+      --bg: #070b14;
+      --panel: #0b1020;
+      --panel2: #0e1428;
+      --border: #1a2840;
+      --cyan: #00d4f5;
+      --cyan2: #0099bb;
+      --cdim: rgba(0, 212, 245, .12);
+      --amber: #f0aa00;
+      --red: #ff3d5a;
+      --green: #00e87a;
+      --gdim: rgba(0, 232, 122, .12);
+      --rdim: rgba(255, 61, 90, .15);
+      --adim: rgba(240, 170, 0, .12);
+      --text: #b8cfe0;
+      --tdim: #3a5060;
+      --tbright: #e0f0ff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      flex-shrink: 0;
+      gap: 12px;
+      flex-wrap: wrap
+    }
+
+    .htitle {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--cyan)
+    }
+
+    .htitle span {
+      color: var(--tdim);
+      font-weight: 400
+    }
+
+    .metrics {
+      display: flex;
+      gap: 16px;
+      align-items: center
+    }
+
+    .mt {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      min-width: 82px
+    }
+
+    .ml {
+      font-size: 9px;
+      color: var(--tdim);
+      letter-spacing: 1px;
+      text-transform: uppercase
+    }
+
+    .mv {
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 1px
+    }
+
+    .mu {
+      font-size: 9px;
+      color: var(--tdim)
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase
+    }
+
+    .ok {
+      background: var(--gdim);
+      color: var(--green);
+      border: 1px solid var(--green)
+    }
+
+    .warn {
+      background: var(--adim);
+      color: var(--amber);
+      border: 1px solid var(--amber)
+    }
+
+    .err {
+      background: var(--rdim);
+      color: var(--red);
+      border: 1px solid var(--red)
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0
+    }
+
+    /* Params */
+    .params {
+      width: 230px;
+      flex-shrink: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .params::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .params::-webkit-scrollbar-thumb {
+      background: var(--border)
+    }
+
+    .sec {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan2);
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px
+    }
+
+    .pg {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .psr {
+      display: flex;
+      flex-direction: column;
+      gap: 3px
+    }
+
+    .pst {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline
+    }
+
+    .psl {
+      font-size: 10px;
+      color: var(--tdim)
+    }
+
+    .psv {
+      font-size: 11px;
+      color: var(--tbright);
+      font-weight: bold
+    }
+
+    .psv .u {
+      font-size: 9px;
+      color: var(--tdim);
+      font-weight: normal
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--cyan);
+      cursor: pointer
+    }
+
+    /* Canvas area */
+    .carea {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative
+    }
+
+    .ctb {
+      display: flex;
+      gap: 5px;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      flex-shrink: 0;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .tb {
+      padding: 3px 9px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all .15s;
+      text-transform: uppercase;
+      white-space: nowrap
+    }
+
+    .tb:hover {
+      border-color: var(--cyan2);
+      color: var(--cyan)
+    }
+
+    .tb.on {
+      background: var(--cdim);
+      border-color: var(--cyan);
+      color: var(--cyan)
+    }
+
+    .tb.measure-on {
+      background: rgba(240, 170, 0, .15);
+      border-color: var(--amber);
+      color: var(--amber)
+    }
+
+    .tsep {
+      width: 1px;
+      height: 14px;
+      background: var(--border);
+      margin: 0 3px
+    }
+
+    #cinfo {
+      font-size: 9px;
+      color: var(--tdim);
+      margin-left: 4px
+    }
+
+    #mainCanvas {
+      display: block;
+      flex: 1;
+      width: 100%;
+      background: var(--bg)
+    }
+
+    .hint {
+      position: absolute;
+      bottom: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: var(--tdim);
+      background: rgba(7, 11, 20, .8);
+      padding: 3px 10px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+      pointer-events: none
+    }
+
+    /* Detail panel — sits NEXT TO canvas, not overlapping */
+    .detail-wrap {
+      display: none;
+      width: 430px;
+      flex-shrink: 0;
+      flex-direction: column;
+      border-left: 1px solid var(--border);
+      background: var(--bg)
+    }
+
+    .detail-wrap.show {
+      display: flex
+    }
+
+    .detail-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      flex-shrink: 0
+    }
+
+    .detail-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan)
+    }
+
+    .detail-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--tdim);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 2px 7px;
+      border-radius: 2px
+    }
+
+    .detail-close:hover {
+      border-color: var(--red);
+      color: var(--red)
+    }
+
+    #detailCanvas {
+      display: block;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      background: var(--bg)
+    }
+
+    /* Table panel */
+    .tpanel {
+      width: 250px;
+      flex-shrink: 0;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 10px
+    }
+
+    .tpanel::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .tpanel::-webkit-scrollbar-thumb {
+      background: var(--border)
+    }
+
+    .stbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px
+    }
+
+    .stbl th {
+      text-align: right;
+      padding: 4px 4px;
+      color: var(--tdim);
+      font-size: 9px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap
+    }
+
+    .stbl th:first-child {
+      text-align: center
+    }
+
+    .stbl td {
+      text-align: right;
+      padding: 2px 4px;
+      border-bottom: 1px solid rgba(26, 40, 64, .4);
+      font-size: 10px;
+      color: var(--text);
+      cursor: pointer
+    }
+
+    .stbl td:first-child {
+      text-align: center;
+      color: var(--tdim)
+    }
+
+    .stbl tr:hover td,
+    .stbl tr.hov td {
+      background: var(--cdim)
+    }
+
+    .stbl tr.sel td {
+      background: rgba(0, 212, 245, .18);
+      color: var(--cyan)
+    }
+
+    .drvd {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px
+    }
+
+    .drow {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 3px 7px;
+      background: var(--panel2);
+      border-radius: 3px;
+      border: 1px solid var(--border)
+    }
+
+    .dlbl {
+      font-size: 10px;
+      color: var(--tdim)
+    }
+
+    .dval {
+      font-size: 11px;
+      color: var(--tbright);
+      font-weight: bold
+    }
+
+    .dval.ok {
+      color: var(--green)
+    }
+
+    .dval.warn {
+      color: var(--amber)
+    }
+
+    .dval.err {
+      color: var(--red)
+    }
+
+    /* Measure readout */
+    #measureBox {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: var(--amber);
+      background: rgba(7, 11, 20, .9);
+      padding: 5px 14px;
+      border-radius: 3px;
+      border: 1px solid var(--amber);
+      pointer-events: none;
+      display: none;
+      white-space: nowrap
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="htitle">Calculadora de <span>Escalera</span></div>
+    <div class="metrics">
+      <div class="mt"><span class="ml">Alzada</span><span class="mv" id="h-alz">—</span><span class="mu">mm</span></div>
+      <div class="mt"><span class="ml">Pedada</span><span class="mv" id="h-ped">—</span><span class="mu">mm</span></div>
+      <div class="mt"><span class="ml">Ángulo</span><span class="mv" id="h-ang">—</span><span class="mu">°</span></div>
+      <div class="mt"><span class="ml">Blondel 2A+P</span><span class="mv" id="h-blo">—</span><span class="mu">mm</span>
+      </div>
+      <div id="h-badge" class="badge ok">OK</div>
+    </div>
+  </header>
+  <div class="main">
+
+    <!-- PARAMS -->
+    <div class="params">
+      <div>
+        <div class="sec">Geometría</div>
+        <div class="pg">
+          <div class="psr">
+            <div class="pst"><span class="psl">Escalones</span><span class="psv"><span id="sv-nSteps">16</span></span>
+            </div><input type="range" id="s-nSteps" min="5" max="25" step="1" value="16">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Altura Total</span><span class="psv"><span
+                  id="sv-altTotal">3140</span><span class="u"> mm</span></span></div><input type="range" id="s-altTotal"
+              min="1500" max="5000" step="10" value="3140">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Largo Total</span><span class="psv"><span
+                  id="sv-largoTotal">4000</span><span class="u"> mm</span></span></div><input type="range"
+              id="s-largoTotal" min="1500" max="8000" step="10" value="4000">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Largo Disponible</span><span class="psv"><span
+                  id="sv-largoDisp">4200</span><span class="u"> mm</span></span></div><input type="range"
+              id="s-largoDisp" min="1500" max="8000" step="10" value="4200">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Largo Escalón</span><span class="psv"><span
+                  id="sv-largoEsc">300</span><span class="u"> mm</span></span></div><input type="range" id="s-largoEsc"
+              min="200" max="450" step="5" value="300">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Alto Escalón (espesor)</span><span class="psv"><span
+                  id="sv-altoEsc">101.6</span><span class="u"> mm</span></span></div><input type="range" id="s-altoEsc"
+              min="30" max="200" step="0.5" value="101.6">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Espacio</div>
+        <div class="pg">
+          <div class="psr">
+            <div class="pst"><span class="psl">Altura Cielorraso</span><span class="psv"><span
+                  id="sv-cielorraso">2410</span><span class="u"> mm</span></span></div><input type="range"
+              id="s-cielorraso" min="1800" max="4000" step="10" value="2410">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Ancho Hueco</span><span class="psv"><span
+                  id="sv-anchoHueco">880</span><span class="u"> mm</span></span></div><input type="range"
+              id="s-anchoHueco" min="600" max="1500" step="10" value="880">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Troncal (120×100)</div>
+        <div class="pg">
+          <div class="psr">
+            <div class="pst"><span class="psl">Ancho A (⊥ pendiente)</span><span class="psv"><span
+                  id="sv-tronA">120</span><span class="u"> mm</span></span></div><input type="range" id="s-tronA"
+              min="50" max="300" step="5" value="120">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Ancho B</span><span class="psv"><span id="sv-tronB">100</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-tronB" min="50" max="300" step="5"
+              value="100">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Luz mín. escalón→troncal</span><span class="psv"><span
+                  id="sv-luzMin">10</span><span class="u"> mm</span></span></div><input type="range" id="s-luzMin"
+              min="5" max="50" step="1" value="10">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Soporte (100×100)</div>
+        <div class="pg">
+          <div class="psr">
+            <div class="pst"><span class="psl">Ancho A (en X)</span><span class="psv"><span id="sv-sopA">100</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-sopA" min="50" max="200" step="5"
+              value="100">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Ancho B</span><span class="psv"><span id="sv-sopB">100</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-sopB" min="50" max="200" step="5"
+              value="100">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Chapa Soporte</div>
+        <div class="pg">
+          <div class="psr">
+            <div class="pst"><span class="psl">Largo chapa (en X)</span><span class="psv"><span
+                  id="sv-chapaL">200</span><span class="u"> mm</span></span></div><input type="range" id="s-chapaL"
+              min="50" max="400" step="10" value="200">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Espesor chapa</span><span class="psv"><span id="sv-chapaE">5</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-chapaE" min="3" max="20" step="1"
+              value="5">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Embutido en escalón</span><span class="psv"><span
+                  id="sv-embutido">8</span><span class="u"> mm</span></span></div><input type="range" id="s-embutido"
+              min="3" max="30" step="1" value="8">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Ventana 1</div>
+        <div class="pg">
+          <div class="psr">
+            <div class="pst"><span class="psl">X ini</span><span class="psv"><span id="sv-v1x1">2467</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-v1x1" min="0" max="6000" step="10"
+              value="2467">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">X fin</span><span class="psv"><span id="sv-v1x2">3093</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-v1x2" min="0" max="6000" step="10"
+              value="3093">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Y inf</span><span class="psv"><span id="sv-v1y1">165</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-v1y1" min="0" max="3000" step="10"
+              value="165">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Y sup</span><span class="psv"><span id="sv-v1y2">2200</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-v1y2" min="0" max="5000" step="10"
+              value="2200">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Ventana 2</div>
+        <div class="pg">
+          <div class="psr">
+            <div class="pst"><span class="psl">X ini</span><span class="psv"><span id="sv-v2x1">3378</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-v2x1" min="0" max="6000" step="10"
+              value="3378">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">X fin</span><span class="psv"><span id="sv-v2x2">3844</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-v2x2" min="0" max="6000" step="10"
+              value="3844">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Y inf</span><span class="psv"><span id="sv-v2y1">165</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-v2y1" min="0" max="3000" step="10"
+              value="165">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Y sup</span><span class="psv"><span id="sv-v2y2">2200</span><span
+                  class="u"> mm</span></span></div><input type="range" id="s-v2y2" min="0" max="5000" step="10"
+              value="2200">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CANVAS -->
+    <div class="carea" id="canvasWrap">
+      <div class="ctb">
+        <span style="font-size:9px;color:var(--tdim);margin-right:2px">VER:</span>
+        <button class="tb on" id="opt-soportes" onclick="tog('soportes')">Soportes</button>
+        <button class="tb on" id="opt-chapas" onclick="tog('chapas')">Chapa</button>
+        <button class="tb on" id="opt-cotas" onclick="tog('cotas')">Cotas</button>
+        <button class="tb on" id="opt-ventanas" onclick="tog('ventanas')">Ventanas</button>
+        <button class="tb on" id="opt-clearance" onclick="tog('clearance')">Libre paso</button>
+        <div class="tsep"></div>
+        <button class="tb" onclick="fitView()">⊡ FIT</button>
+        <button class="tb" onclick="zoomBtn(1.25)">+</button>
+        <button class="tb" onclick="zoomBtn(1/1.25)">−</button>
+        <div class="tsep"></div>
+        <button class="tb" id="btnMeasure" onclick="toggleMeasure()" title="Medir entre nodos (M)">📐 MEDIR</button>
+        <button class="tb" id="btnClearMeasure" onclick="clearMeasure()" style="display:none">✕ LIMPIAR</button>
+        <div class="tsep"></div>
+        <span id="cinfo"></span>
+      </div>
+      <canvas id="mainCanvas"></canvas>
+      <div id="measureBox"></div>
+      <div class="hint" id="hintBar">Rueda: zoom · Shift+drag/botón medio: pan · Doble clic: fit · Clic escalón: detalle
+      </div>
+    </div>
+
+    <!-- DETAIL PANEL (beside canvas, not overlapping) -->
+    <div class="detail-wrap" id="detailWrap">
+      <div class="detail-hdr">
+        <div class="detail-title" id="detailTitle">Detalle Escalón</div>
+        <button class="detail-close" onclick="closeDetail()">✕</button>
+      </div>
+      <canvas id="detailCanvas"></canvas>
+    </div>
+
+    <!-- TABLE -->
+    <div class="tpanel">
+      <div class="sec">Escalones</div>
+      <table class="stbl">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cx</th>
+            <th>Corta</th>
+            <th>Larga</th>
+            <th>Libre</th>
+          </tr>
+        </thead>
+        <tbody id="stbl"></tbody>
+      </table>
+      <div class="drvd">
+        <div class="sec" style="margin-top:8px">Verificaciones</div>
+        <div class="drow"><span class="dlbl">Alzada</span><span class="dval" id="d-alz">—</span></div>
+        <div class="drow"><span class="dlbl">Pedada</span><span class="dval" id="d-ped">—</span></div>
+        <div class="drow"><span class="dlbl">Blondel (2A+P)</span><span class="dval" id="d-blo">—</span></div>
+        <div class="drow"><span class="dlbl">Ángulo</span><span class="dval" id="d-ang">—</span></div>
+        <div class="drow"><span class="dlbl">Long. troncal</span><span class="dval" id="d-tronc">—</span></div>
+        <div class="drow"><span class="dlbl">Corta soporte</span><span class="dval" id="d-corta">—</span></div>
+        <div class="drow"><span class="dlbl">Larga soporte</span><span class="dval" id="d-larga">—</span></div>
+        <div class="drow"><span class="dlbl">Excede disp.</span><span class="dval" id="d-exc">—</span></div>
+        <div class="drow"><span class="dlbl">Libre paso mín.</span><span class="dval" id="d-lib">—</span></div>
+        <div class="sec" style="margin-top:8px">Blondel</div>
+        <div
+          style="font-size:9px;color:var(--tdim);line-height:1.7;padding:5px 7px;background:var(--panel2);border:1px solid var(--border);border-radius:3px">
+          2A+P = 630±20 mm<br>Alzada: 150–200 mm<br>Pedada: 250–300 mm<br>Ángulo: 30°–40°
+        </div>
+      </div>
+    </div>
+  </div><!-- /main -->
+
+  <script>
+    // ════════════════════════════════════════════════════════
+    // PARAMETERS
+    // ════════════════════════════════════════════════════════
+    const P = {
+      nSteps: 16, altTotal: 3140, largoTotal: 4000, largoDisp: 4200,
+      largoEsc: 300, altoEsc: 101.6, cielorraso: 2410, anchoHueco: 880,
+      tronA: 120, tronB: 100, luzMin: 10,
+      sopA: 100, sopB: 100,
+      chapaL: 200, chapaE: 5, embutido: 8,
+      v1x1: 2467, v1x2: 3093, v1y1: 165, v1y2: 2200,
+      v2x1: 3378, v2x2: 3844, v2y1: 165, v2y2: 2200,
+    };
+    const opts = { soportes: true, chapas: true, cotas: true, ventanas: true, clearance: true };
+    let hovStep = -1, selStep = -1;
+
+    // ════════════════════════════════════════════════════════
+    // MAIN CANVAS TRANSFORM
+    // ════════════════════════════════════════════════════════
+    const T = { ox: 0, oy: 0, sc: 1 };
+    const mcv = document.getElementById('mainCanvas');
+    const mctx = mcv.getContext('2d');
+
+    function W2S(wx, wy) { return [T.ox + wx * T.sc, mcv.height - T.oy - wy * T.sc]; }
+    function S2W(sx, sy) { return [(sx - T.ox) / T.sc, (mcv.height - sy - T.oy) / T.sc]; }
+
+    function fitView() {
+      const ml = 70, mr = 30, mt = 30, mb = 60;
+      const W = mcv.width - ml - mr, H = mcv.height - mt - mb;
+      if (W <= 0 || H <= 0) return;
+      const wW = Math.max(P.largoDisp, P.largoTotal) * 1.1, wH = P.altTotal * 1.2;
+      T.sc = Math.min(W / wW, H / wH); T.ox = ml; T.oy = mb; draw();
+    }
+    function zoomAt(mx, my, f) {
+      T.ox = mx - (mx - T.ox) * f; T.oy = (mcv.height - my) - (mcv.height - my - T.oy) * f; T.sc *= f; draw();
+    }
+    function zoomBtn(f) { zoomAt(mcv.width / 2, mcv.height / 2, f); }
+
+    // ════════════════════════════════════════════════════════
+    // PAN & ZOOM
+    // ════════════════════════════════════════════════════════
+    let panning = false, panLast = { x: 0, y: 0 };
+    mcv.addEventListener('wheel', e => {
+      e.preventDefault();
+      const r = mcv.getBoundingClientRect();
+      zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+    }, { passive: false });
+    mcv.addEventListener('mousedown', e => {
+      if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+        e.preventDefault(); panning = true; panLast = { x: e.clientX, y: e.clientY };
+        mcv.style.cursor = 'grabbing';
+      }
+    });
+    window.addEventListener('mousemove', e => {
+      if (!panning) return;
+      T.ox += e.clientX - panLast.x; T.oy -= e.clientY - panLast.y;
+      panLast = { x: e.clientX, y: e.clientY }; draw();
+    });
+    window.addEventListener('mouseup', e => {
+      if (e.button === 0 || e.button === 1) { panning = false; mcv.style.cursor = measureMode ? 'crosshair' : 'default'; }
+    });
+    mcv.addEventListener('dblclick', () => fitView());
+    mcv.addEventListener('contextmenu', e => e.preventDefault());
+
+    // ════════════════════════════════════════════════════════
+    // MEASURE TOOL
+    // ════════════════════════════════════════════════════════
+    let measureMode = false;
+    let snapNode = null;        // {wx,wy,label} closest node in world coords
+    let measureP1 = null;       // first clicked node
+    let measureP2 = null;       // second clicked node
+    let snapNodes = [];         // rebuilt every draw()
+    const SNAP_PX = 16;         // snap radius in pixels
+
+    function toggleMeasure() {
+      measureMode = !measureMode;
+      clearMeasure();
+      const btn = document.getElementById('btnMeasure');
+      btn.classList.toggle('measure-on', measureMode);
+      btn.textContent = measureMode ? '📐 MIDIENDO' : '📐 MEDIR';
+      document.getElementById('hintBar').textContent = measureMode
+        ? 'Clic en nodo para fijar P1, clic en otro nodo para medir · ESC cancela'
+        : 'Rueda: zoom · Shift+drag/botón medio: pan · Doble clic: fit · Clic escalón: detalle';
+      draw();
+    }
+    function clearMeasure() {
+      measureP1 = null; measureP2 = null; snapNode = null;
+      document.getElementById('measureBox').style.display = 'none';
+      document.getElementById('btnClearMeasure').style.display = 'none';
+      draw();
+    }
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { if (measureMode) toggleMeasure(); else if (selStep >= 0) closeDetail(); }
+      if (e.key.toLowerCase() === 'm') toggleMeasure();
+    });
+
+    function buildSnapNodes(d) {
+      // Collect all geometry nodes (world coords) with labels
+      const nodes = [];
+      const add = (wx, wy, label) => nodes.push({ wx, wy, label });
+      // Add floor/wall origin
+      add(0, 0, 'Origen (0,0)');
+      d.steps.forEach((s, i) => {
+        const n = s.num;
+        add(s.xI, s.yF, `Esc${n} TL`);
+        add(s.xF, s.yF, `Esc${n} TR`);
+        add(s.xI, s.yI, `Esc${n} BL`);
+        add(s.xF, s.yI, `Esc${n} BR`);
+        add(s.cx, s.yI, `Esc${n} CX-bot`);
+        add(s.cx, s.yF, `Esc${n} CX-top`);
+        if (i < P.nSteps - 1) {
+          const hw = P.sopA / 2, chw = P.chapaL / 2;
+          const chapaBot = s.yI + P.embutido;
+          // Soporte corners — top meets chapa bottom
+          add(s.cx - hw, chapaBot, `Sop${n} TL`);
+          add(s.cx + hw, chapaBot, `Sop${n} TR`);
+          add(s.cx - hw, d.tY(s.cx - hw), `Sop${n} BL`);
+          add(s.cx + hw, d.tY(s.cx + hw), `Sop${n} BR`);
+          // Chapa corners (inside step)
+          add(s.cx - chw, chapaBot, `Chapa${n} BL`);
+          add(s.cx + chw, chapaBot, `Chapa${n} BR`);
+          add(s.cx - chw, chapaBot + P.chapaE, `Chapa${n} TL`);
+          add(s.cx + chw, chapaBot + P.chapaE, `Chapa${n} TR`);
+        }
+      });
+      // Troncal corners
+      d.TC.forEach((pt, i) => add(pt[0], pt[1], `Tronc[${i}]`));
+      return nodes;
+    }
+
+    function findSnap(sx, sy) {
+      // Find closest node in screen distance
+      let best = null, bestDist = SNAP_PX;
+      for (const n of snapNodes) {
+        const [nsx, nsy] = W2S(n.wx, n.wy);
+        const d = Math.hypot(sx - nsx, sy - nsy);
+        if (d < bestDist) { bestDist = d; best = n; }
+      }
+      return best;
+    }
+
+    function drawSnapNodes(c) {
+      if (!measureMode) return;
+      // Draw a small cross/circle at every node when in measure mode
+      c.save();
+      snapNodes.forEach(n => {
+        const [sx, sy] = W2S(n.wx, n.wy);
+        c.strokeStyle = 'rgba(0,212,245,.3)'; c.lineWidth = 1;
+        c.beginPath(); c.arc(sx, sy, 4, 0, Math.PI * 2); c.stroke();
+      });
+      c.restore();
+    }
+
+    function drawSnapHighlight(c) {
+      if (!measureMode || !snapNode) return;
+      const [sx, sy] = W2S(snapNode.wx, snapNode.wy);
+      c.save();
+      // Outer ring
+      c.strokeStyle = 'var(--amber)'; c.lineWidth = 2;
+      c.beginPath(); c.arc(sx, sy, 9, 0, Math.PI * 2); c.stroke();
+      // Cross
+      c.beginPath();
+      c.moveTo(sx - 12, sy); c.lineTo(sx + 12, sy);
+      c.moveTo(sx, sy - 12); c.lineTo(sx, sy + 12);
+      c.stroke();
+      // Label
+      c.fillStyle = 'var(--amber)'; c.font = 'bold 10px Share Tech Mono';
+      c.fillText(snapNode.label, sx + 14, sy - 6);
+      c.restore();
+    }
+
+    function drawMeasure(c) {
+      if (!measureMode) return;
+      // Draw P1 if set
+      if (measureP1) {
+        const [sx, sy] = W2S(measureP1.wx, measureP1.wy);
+        c.save(); c.strokeStyle = '#00e87a'; c.lineWidth = 2;
+        c.beginPath(); c.arc(sx, sy, 7, 0, Math.PI * 2); c.stroke();
+        c.fillStyle = '#00e87a'; c.font = 'bold 10px Share Tech Mono';
+        c.fillText('P1', sx + 10, sy - 6); c.restore();
+      }
+      // Draw P2 + line + distance
+      if (measureP1 && measureP2) {
+        const [s1x, s1y] = W2S(measureP1.wx, measureP1.wy);
+        const [s2x, s2y] = W2S(measureP2.wx, measureP2.wy);
+        c.save();
+        // Line
+        c.strokeStyle = 'rgba(240,170,0,.9)'; c.lineWidth = 1.5; c.setLineDash([5, 3]);
+        c.beginPath(); c.moveTo(s1x, s1y); c.lineTo(s2x, s2y); c.stroke();
+        c.setLineDash([]);
+        // P2
+        c.strokeStyle = '#00e87a'; c.lineWidth = 2;
+        c.beginPath(); c.arc(s2x, s2y, 7, 0, Math.PI * 2); c.stroke();
+        c.fillStyle = '#00e87a'; c.font = 'bold 10px Share Tech Mono';
+        c.fillText('P2', s2x + 10, s2y - 6);
+        // Distance label at midpoint
+        const mx = (s1x + s2x) / 2, my = (s1y + s2y) / 2;
+        const dx = measureP2.wx - measureP1.wx, dy = measureP2.wy - measureP1.wy;
+        const dist = Math.hypot(dx, dy);
+        const dxAbs = Math.abs(dx), dyAbs = Math.abs(dy);
+        const txt = `${dist.toFixed(1)} mm  (Δx=${dxAbs.toFixed(1)}  Δy=${dyAbs.toFixed(1)})`;
+        // Background pill
+        c.font = 'bold 11px Share Tech Mono';
+        const tw = c.measureText(txt).width;
+        c.fillStyle = 'rgba(7,11,20,.9)';
+        c.fillRect(mx - tw / 2 - 8, my - 16, tw + 16, 22);
+        c.strokeStyle = 'var(--amber)'; c.lineWidth = 1;
+        c.strokeRect(mx - tw / 2 - 8, my - 16, tw + 16, 22);
+        c.fillStyle = 'var(--amber)'; c.textAlign = 'center';
+        c.fillText(txt, mx, my - 1); c.textAlign = 'start';
+        c.restore();
+        // Update box
+        const box = document.getElementById('measureBox');
+        box.style.display = 'block';
+        box.textContent = `📐 ${dist.toFixed(2)} mm  |  Δx=${dxAbs.toFixed(2)}  Δy=${dyAbs.toFixed(2)}`;
+        document.getElementById('btnClearMeasure').style.display = 'block';
+      } else if (measureP1 && snapNode) {
+        // Live rubber-band line to current snap/cursor
+        const [s1x, s1y] = W2S(measureP1.wx, measureP1.wy);
+        const [s2x, s2y] = W2S(snapNode.wx, snapNode.wy);
+        const dx = snapNode.wx - measureP1.wx, dy = snapNode.wy - measureP1.wy;
+        const dist = Math.hypot(dx, dy);
+        c.save();
+        c.strokeStyle = 'rgba(240,170,0,.5)'; c.lineWidth = 1; c.setLineDash([4, 4]);
+        c.beginPath(); c.moveTo(s1x, s1y); c.lineTo(s2x, s2y); c.stroke(); c.setLineDash([]);
+        // live distance
+        c.fillStyle = 'rgba(240,170,0,.7)'; c.font = '10px Share Tech Mono'; c.textAlign = 'center';
+        c.fillText(dist.toFixed(1) + ' mm', (s1x + s2x) / 2, (s1y + s2y) / 2 - 8); c.textAlign = 'start';
+        c.restore();
+      }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // RESIZE
+    // ════════════════════════════════════════════════════════
+    let inited = false;
+    function resizeAll() {
+      const wrap = document.getElementById('canvasWrap');
+      const tb = wrap.querySelector('.ctb');
+      mcv.width = wrap.clientWidth;
+      mcv.height = wrap.clientHeight - tb.offsetHeight;
+      // resize detail canvas too
+      resizeDetail();
+      if (!inited) { fitView(); inited = true; }
+      else { draw(); if (selStep >= 0) redrawDetail(); }
+    }
+    function resizeDetail() {
+      const dw = document.getElementById('detailWrap');
+      const dc = document.getElementById('detailCanvas');
+      const hdr = dw.querySelector('.detail-hdr');
+      if (dw.classList.contains('show')) {
+        dc.width = dw.clientWidth;
+        dc.height = dw.clientHeight - hdr.offsetHeight;
+      }
+    }
+    new ResizeObserver(resizeAll).observe(document.getElementById('canvasWrap'));
+
+    // ════════════════════════════════════════════════════════
+    // CALCULATIONS
+    // ════════════════════════════════════════════════════════
+    function calc() {
+      const alzada = P.altTotal / (P.nSteps + 1);
+      const pedada = P.largoTotal / P.nSteps;
+      const ang = Math.atan2(alzada, pedada);
+      const cosA = Math.cos(ang), sinA = Math.sin(ang), tanA = alzada / pedada;
+      const blondel = 2 * alzada + pedada;
+      const steps = [];
+      for (let i = 1; i <= P.nSteps; i++) {
+        const xF = i * pedada, xI = Math.max(0, xF - P.largoEsc);
+        const yF = (P.nSteps + 1 - i) * alzada, yI = yF - P.altoEsc;
+        steps.push({ num: i, xI, xF, yI, yF, cx: xF - P.largoEsc / 2 });
+      }
+      const avgSup = alzada - P.altoEsc / 2 - P.luzMin;
+      const xRef = steps[0].cx, yRef = steps[0].yI - avgSup;
+      const tY = x => yRef - tanA * (x - xRef);
+      // Troncal endpoint (bottom face hits floor)
+      const xEnd = xRef + (yRef - cosA * P.tronA) / tanA;
+      // Troncal trapezoid with VERTICAL end cuts
+      const TC = [
+        [0, tY(0)],  // TL
+        [xEnd, tY(xEnd)],  // TR
+        [xEnd, 0],  // BR (floor)
+        [0, tY(0) - cosA * P.tronA],  // BL
+      ];
+      const longTronc = Math.hypot(xEnd, tY(0) - 0);
+      // Soporte llega hasta la base de la chapa (yI + embutido), no la base de la madera (yI)
+      const sopTop = P.embutido; // offset extra que acorta el soporte
+      const corta = avgSup - sopTop - P.sopA / 2 * tanA;
+      const larga = avgSup - sopTop + P.sopA / 2 * tanA;
+      return { alzada, pedada, ang, cosA, sinA, tanA, blondel, steps, tY, TC, xEnd, longTronc, corta, larga, avgSup };
+    }
+
+    // ════════════════════════════════════════════════════════
+    // MAIN DRAW
+    // ════════════════════════════════════════════════════════
+    function draw() {
+      if (!mcv.width || !mcv.height) return;
+      const d = calc();
+      snapNodes = buildSnapNodes(d);
+      mctx.clearRect(0, 0, mcv.width, mcv.height);
+      drawGrid(mctx, mcv, W2S, S2W, T.sc);
+      // Troncal drawn FIRST so floor/wall slabs draw on top and cleanly cap the ends
+      drawTroncal(d, mctx, mcv, W2S);
+      drawRefLines(d, mctx, mcv, W2S);
+      if (opts.ventanas) drawVentanas(mctx, W2S);
+      if (opts.soportes) drawSoportes(d, mctx, W2S);
+      drawSteps(d, mctx, mcv, W2S);
+      if (opts.cotas) drawCotas(d, mctx, W2S);
+      drawAxesLabels(mctx, mcv, W2S, S2W, T.sc);
+      // measure overlay
+      drawSnapNodes(mctx);
+      drawSnapHighlight(mctx);
+      drawMeasure(mctx);
+      updateUI(d);
+    }
+
+    // ── Grid ─────────────────────────────────────────────────
+    function gridStep(sc) {
+      const r = 400 / sc, m = Math.pow(10, Math.floor(Math.log10(r))), n = r / m;
+      return n < 2 ? m : n < 5 ? 2 * m : 5 * m;
+    }
+    function drawGrid(c, canv, w2s, s2w, sc) {
+      const gs = gridStep(sc);
+      const [wx0, wy0] = s2w(0, canv.height), [wx1, wy1] = s2w(canv.width, 0);
+      c.save(); c.strokeStyle = 'rgba(0,100,150,.07)'; c.lineWidth = 1;
+      for (let gx = Math.floor(wx0 / gs) * gs; gx <= wx1 + gs; gx += gs) {
+        const [a, b] = w2s(gx, wy0 - gs), [cc, dd] = w2s(gx, wy1 + gs);
+        c.beginPath(); c.moveTo(a, b); c.lineTo(cc, dd); c.stroke();
+      }
+      for (let gy = Math.floor(wy0 / gs) * gs; gy <= wy1 + gs; gy += gs) {
+        const [a, b] = w2s(wx0 - gs, gy), [cc, dd] = w2s(wx1 + gs, gy);
+        c.beginPath(); c.moveTo(a, b); c.lineTo(cc, dd); c.stroke();
+      }
+      c.restore();
+    }
+
+    // ── Ref Lines ──────────────────────────────────────────────
+    function drawRefLines(d, c, canv, w2s) {
+      const mx = Math.max(P.largoDisp, P.largoTotal) * 1.1;
+      const [wx, wya] = w2s(0, 0), [, wyb] = w2s(0, P.altTotal * 1.5);
+      const [fx1, fy] = w2s(0, 0), [fx2,] = w2s(mx, 0);
+      c.save(); c.font = '9px Share Tech Mono';
+      // Wall
+      c.strokeStyle = 'rgba(100,160,200,.22)'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(wx, wya); c.lineTo(wx, wyb); c.stroke();
+      c.fillStyle = 'rgba(60,100,140,.5)'; c.fillRect(wx - 6, wyb, 6, wya - wyb);
+      // Floor
+      c.strokeStyle = 'rgba(80,140,180,.2)'; c.lineWidth = 1.5; c.setLineDash([6, 4]);
+      c.beginPath(); c.moveTo(fx1, fy); c.lineTo(fx2, fy); c.stroke(); c.setLineDash([]);
+      c.fillStyle = 'rgba(50,90,130,.55)'; c.fillRect(fx1, fy, fx2 - fx1, 6);
+      // Piso superior
+      const [, py] = w2s(0, P.altTotal), [px2,] = w2s(mx, P.altTotal);
+      c.strokeStyle = 'rgba(0,100,80,.35)'; c.lineWidth = 1; c.setLineDash([8, 3]);
+      c.beginPath(); c.moveTo(fx1, py); c.lineTo(px2, py); c.stroke(); c.setLineDash([]);
+      c.fillStyle = 'rgba(0,180,130,.45)'; c.fillText('PISO SUP. ' + P.altTotal, fx1 + 4, py - 5);
+      // Cielorraso
+      const [, cy] = w2s(0, P.cielorraso);
+      c.strokeStyle = 'rgba(255,180,0,.22)'; c.lineWidth = 1; c.setLineDash([3, 6]);
+      c.beginPath(); c.moveTo(fx1, cy); c.lineTo(fx2, cy); c.stroke(); c.setLineDash([]);
+      c.fillStyle = 'rgba(255,180,0,.4)'; c.fillText('CIELORRASO ' + P.cielorraso, fx1 + 4, cy - 5);
+      // Largo disp
+      const [lx,] = w2s(P.largoDisp, 0);
+      c.strokeStyle = 'rgba(240,170,0,.4)'; c.lineWidth = 1; c.setLineDash([4, 4]);
+      c.beginPath(); c.moveTo(lx, fy); c.lineTo(lx, py); c.stroke(); c.setLineDash([]);
+      c.fillStyle = 'rgba(240,170,0,.6)'; c.textAlign = 'center'; c.fillText('DISP.', lx, fy - 8); c.textAlign = 'start';
+      c.restore();
+    }
+
+    // ── Ventanas ──────────────────────────────────────────────
+    function drawVentanas(c, w2s) {
+      [{ x1: P.v1x1, x2: P.v1x2, y1: P.v1y1, y2: P.v1y2, l: 'V1' },
+      { x1: P.v2x1, x2: P.v2x2, y1: P.v2y1, y2: P.v2y2, l: 'V2' }].forEach(w => {
+        const [sx1, sy1] = w2s(w.x1, w.y2), [sx2, sy2] = w2s(w.x2, w.y1);
+        c.save();
+        c.fillStyle = 'rgba(0,150,220,.06)'; c.fillRect(sx1, sy1, sx2 - sx1, sy2 - sy1);
+        c.strokeStyle = 'rgba(0,180,255,.4)'; c.lineWidth = 1.5; c.strokeRect(sx1, sy1, sx2 - sx1, sy2 - sy1);
+        c.beginPath(); c.moveTo(sx1, sy1); c.lineTo(sx2, sy2); c.moveTo(sx2, sy1); c.lineTo(sx1, sy2);
+        c.strokeStyle = 'rgba(0,180,255,.15)'; c.lineWidth = 1; c.stroke();
+        c.fillStyle = 'rgba(0,180,255,.7)'; c.font = 'bold 10px Share Tech Mono'; c.fillText(w.l, sx1 + 4, sy1 + 13);
+        c.restore();
+      });
+    }
+
+    // ── Troncal (vertical end-cuts) ──────────────────────────
+    // No floor-clip needed: TC geometry is constrained (BR.y=0, BL.y>0)
+    // Floor slab (drawn on top) caps the bottom end cleanly
+    function drawTroncal(d, c, canv, w2s) {
+      const { TC, sinA, cosA } = d;
+      c.save();
+      c.beginPath();
+      const [s0x, s0y] = w2s(TC[0][0], TC[0][1]); c.moveTo(s0x, s0y);
+      for (let i = 1; i < 4; i++) { const [sx, sy] = w2s(TC[i][0], TC[i][1]); c.lineTo(sx, sy); }
+      c.closePath();
+      c.fillStyle = 'rgba(200,110,20,.18)'; c.fill();
+      c.strokeStyle = 'rgba(255,150,40,.9)'; c.lineWidth = 1.5; c.stroke();
+      // hatch
+      c.save(); c.clip(); c.strokeStyle = 'rgba(255,150,40,.1)'; c.lineWidth = 1;
+      const gap = Math.max(5, 10 * T.sc);
+      const dx = TC[1][0] - TC[0][0], dy = TC[1][1] - TC[0][1], L = Math.hypot(dx, dy);
+      const ux = dx / L, uy = dy / L, bx = TC[3][0] - TC[0][0], by = TC[3][1] - TC[0][1];
+      for (let t = -L; t < L * 2; t += gap) {
+        const [hx1, hy1] = w2s(TC[0][0] + ux * t, TC[0][1] + uy * t);
+        const [hx2, hy2] = w2s(TC[0][0] + ux * t + bx, TC[0][1] + uy * t + by);
+        c.beginPath(); c.moveTo(hx1, hy1); c.lineTo(hx2, hy2); c.stroke();
+      }
+      c.restore();
+      // label
+      const mlx = (TC[0][0] + TC[1][0]) / 2 + (TC[3][0] - TC[0][0]) / 2;
+      const mly = (TC[0][1] + TC[1][1]) / 2 + (TC[3][1] - TC[0][1]) / 2;
+      const [lx, ly] = w2s(mlx, mly);
+      c.save(); c.translate(lx, ly); c.rotate(-Math.atan2(cosA, sinA));
+      c.fillStyle = 'rgba(255,155,40,.9)'; c.font = '9px Share Tech Mono'; c.textAlign = 'center';
+      c.fillText('TRONCAL ' + P.tronA + '×' + P.tronB, 0, 4); c.restore();
+      c.restore();
+    }
+
+    // ── Soportes + Chapas ────────────────────────────────────
+    function drawSoportes(d, c, w2s) {
+      const { steps, tY, corta, larga } = d;
+      const hw = P.sopA / 2, chw = P.chapaL / 2;
+      steps.forEach((s, i) => {
+        if (i === P.nSteps - 1) return;
+        const isH = i === hovStep, isSel = i === selStep;
+        const chapaBot = s.yI + P.embutido;
+        // Soporte trapezoid — top meets chapa bottom, not wood bottom
+        const pts = [[s.cx - hw, chapaBot], [s.cx + hw, chapaBot], [s.cx + hw, tY(s.cx + hw)], [s.cx - hw, tY(s.cx - hw)]];
+        c.save();
+        c.beginPath(); const [sp0x, sp0y] = w2s(pts[0][0], pts[0][1]); c.moveTo(sp0x, sp0y);
+        for (let k = 1; k < 4; k++) { const [sx, sy] = w2s(pts[k][0], pts[k][1]); c.lineTo(sx, sy); }
+        c.closePath();
+        c.fillStyle = isH || isSel ? 'rgba(0,80,130,.65)' : 'rgba(0,160,240,.1)'; c.fill();
+        c.strokeStyle = isSel ? '#00d4f5' : isH ? 'rgba(0,200,255,.8)' : 'rgba(0,180,255,.5)';
+        c.lineWidth = isH || isSel ? 2 : 1; c.stroke();
+        const [cxt, cyt] = w2s(s.cx, chapaBot), [cxb, cyb] = w2s(s.cx, tY(s.cx));
+        c.strokeStyle = 'rgba(0,180,255,.18)'; c.lineWidth = 1; c.setLineDash([2, 3]);
+        c.beginPath(); c.moveTo(cxt, cyt); c.lineTo(cxb, cyb); c.stroke(); c.setLineDash([]);
+        if (isH) {
+          c.fillStyle = '#00d4f5'; c.font = 'bold 10px Share Tech Mono';
+          const [blx, bly] = w2s(s.cx - hw - 8 / T.sc, (chapaBot + tY(s.cx - hw)) / 2);
+          const [brx, bry] = w2s(s.cx + hw + 4 / T.sc, (chapaBot + tY(s.cx + hw)) / 2);
+          c.textAlign = 'right'; c.fillText('C:' + corta.toFixed(1), blx, bly);
+          c.textAlign = 'left'; c.fillText('L:' + larga.toFixed(1), brx, bry); c.textAlign = 'start';
+        }
+        c.restore();
+        // Chapa: embedded inside step wood.
+        if (opts.chapas) {
+          const chapaTop = chapaBot + P.chapaE;
+          const [cx1, cy1] = w2s(s.cx - chw, chapaTop);
+          const [cx2, cy2] = w2s(s.cx + chw, chapaBot);
+          c.save();
+          c.fillStyle = 'rgba(0,220,160,.28)'; c.fillRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+          c.strokeStyle = 'rgba(0,220,160,.85)'; c.lineWidth = 1.5; c.strokeRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+          c.restore();
+        }
+      });
+    }
+
+    // ── Steps ─────────────────────────────────────────────────
+    function drawSteps(d, c, canv, w2s) {
+      const chw = P.chapaL / 2;
+      d.steps.forEach((s, i) => {
+        const isH = i === hovStep, isSel = i === selStep;
+        const [sx1, sy1] = w2s(s.xI, s.yF), [sx2, sy2] = w2s(s.xF, s.yI);
+        const cl = P.altTotal - s.yF;
+        let fill = 'rgba(8,20,36,.92)', stroke = 'rgba(0,170,220,.75)';
+        if (opts.clearance && cl < 2000) { fill = 'rgba(40,5,15,.92)'; stroke = 'rgba(255,50,70,.9)'; }
+        else if (opts.clearance && cl < 2200) { fill = 'rgba(35,20,5,.92)'; stroke = 'rgba(240,160,0,.9)'; }
+        if (isH) { fill = 'rgba(0,40,70,.95)'; stroke = 'rgba(0,212,245,.9)'; }
+        if (isSel) { fill = 'rgba(0,30,60,.95)'; stroke = '#00d4f5'; }
+        c.save();
+        // Draw step with notch (embutido) for non-last steps
+        if (i < P.nSteps - 1 && P.embutido > 0) {
+          const chapaBot = s.yI + P.embutido;
+          const [nL,] = w2s(s.cx - chw, 0);  // notch left X
+          const [nR,] = w2s(s.cx + chw, 0);  // notch right X
+          const [, nY] = w2s(0, chapaBot);   // notch top Y (screen)
+          // Path: rectangle with U-notch at bottom
+          c.beginPath();
+          c.moveTo(sx1, sy1);            // top-left
+          c.lineTo(sx2, sy1);            // top-right
+          c.lineTo(sx2, sy2);            // bottom-right
+          c.lineTo(nR, sy2);             // to notch right (bottom)
+          c.lineTo(nR, nY);              // notch right wall up
+          c.lineTo(nL, nY);              // notch ceiling
+          c.lineTo(nL, sy2);             // notch left wall down
+          c.lineTo(sx1, sy2);            // bottom-left
+          c.closePath();
+          c.fillStyle = fill; c.fill();
+          c.strokeStyle = stroke; c.lineWidth = isH || isSel ? 2 : 1; c.stroke();
+        } else {
+          c.fillStyle = fill; c.fillRect(sx1, sy1, sx2 - sx1, sy2 - sy1);
+          c.strokeStyle = stroke; c.lineWidth = isH || isSel ? 2 : 1; c.strokeRect(sx1, sy1, sx2 - sx1, sy2 - sy1);
+        }
+        if (Math.abs(sx2 - sx1) > 20 && Math.abs(sy2 - sy1) > 9) {
+          c.fillStyle = isH || isSel ? '#00d4f5' : 'rgba(0,160,200,.5)';
+          c.font = '9px Share Tech Mono'; c.textAlign = 'center';
+          c.fillText(s.num, (sx1 + sx2) / 2, (sy1 + sy2) / 2 + 3);
+        }
+        c.restore();
+        if (isH && opts.clearance) {
+          const [arX,] = w2s(s.xF + 18, 0), [, arY1] = w2s(0, s.yF), [, arY2] = w2s(0, P.altTotal);
+          const col = cl < 2000 ? '#ff4060' : cl < 2200 ? '#ffb800' : '#00e87a';
+          c.save(); c.strokeStyle = col; c.lineWidth = 1.5;
+          c.beginPath(); c.moveTo(arX, arY1); c.lineTo(arX, arY2);
+          c.moveTo(arX - 4, arY1 + 6); c.lineTo(arX, arY1); c.lineTo(arX + 4, arY1 + 6);
+          c.moveTo(arX - 4, arY2 - 6); c.lineTo(arX, arY2); c.lineTo(arX + 4, arY2 - 6);
+          c.stroke(); c.fillStyle = col; c.font = 'bold 10px Share Tech Mono';
+          c.fillText(Math.round(cl) + ' mm', arX + 7, (arY1 + arY2) / 2 + 4); c.restore();
+        }
+      });
+    }
+
+    // ── Cotas ─────────────────────────────────────────────────
+    function drawCotas(d, c, w2s) {
+      const { steps, alzada, pedada, larga } = d;
+      const hw = P.sopA / 2, first = steps[0], last = steps[steps.length - 1];
+      c.save(); c.lineWidth = 1;
+      const aV = (x, y, up) => { c.moveTo(x - 4, y + (up ? -7 : 7)); c.lineTo(x, y); c.lineTo(x + 4, y + (up ? -7 : 7)); };
+      const aH = (x, y, lft) => { c.moveTo(x + (lft ? 6 : -6), y - 4); c.lineTo(x, y); c.lineTo(x + (lft ? 6 : -6), y + 4); };
+      {
+        const ox = first.xI - 32 / T.sc; const [ax, ay1] = w2s(ox, first.yF), [, ay2] = w2s(ox, first.yF - alzada);
+        c.strokeStyle = 'rgba(0,212,245,.55)'; c.fillStyle = 'rgba(0,212,245,.8)';
+        c.beginPath(); c.moveTo(ax, ay1); c.lineTo(ax, ay2); aV(ax, ay1, 0); aV(ax, ay2, 1); c.stroke();
+        c.font = '9px Share Tech Mono'; c.save(); c.translate(ax - 12, (ay1 + ay2) / 2); c.rotate(-Math.PI / 2);
+        c.textAlign = 'center'; c.fillText(alzada.toFixed(1) + ' mm', 0, 0); c.restore();
+      }
+      {
+        const oy = last.yI - 28 / T.sc; const [px1, py] = w2s(last.xI, oy), [px2,] = w2s(last.xF, oy);
+        c.strokeStyle = 'rgba(0,212,245,.55)'; c.fillStyle = 'rgba(0,212,245,.8)';
+        c.beginPath(); c.moveTo(px1, py); c.lineTo(px2, py); aH(px1, py, 1); aH(px2, py, 0); c.stroke();
+        c.font = '9px Share Tech Mono'; c.textAlign = 'center'; c.fillText(pedada.toFixed(1) + ' mm', (px1 + px2) / 2, py + 12); c.textAlign = 'start';
+      }
+      {
+        const oy = last.yI - 50 / T.sc; const [bx1, by] = w2s(0, oy), [bx2,] = w2s(P.largoTotal, oy);
+        c.strokeStyle = 'rgba(100,200,50,.5)'; c.fillStyle = 'rgba(100,200,50,.75)';
+        c.beginPath(); c.moveTo(bx1, by); c.lineTo(bx2, by); aH(bx1, by, 1); aH(bx2, by, 0); c.stroke();
+        c.font = '9px Share Tech Mono'; c.textAlign = 'center'; c.fillText('TOTAL: ' + P.largoTotal, (bx1 + bx2) / 2, by + 12); c.textAlign = 'start';
+      }
+      c.restore();
+    }
+
+    // ── Axes ──────────────────────────────────────────────────
+    function drawAxesLabels(c, canv, w2s, s2w, sc) {
+      const gs = gridStep(sc);
+      const [wx0, wy0] = s2w(0, canv.height), [wx1, wy1] = s2w(canv.width, 0);
+      c.save(); c.fillStyle = 'rgba(0,180,220,.3)'; c.font = '9px Share Tech Mono';
+      for (let gx = Math.ceil(wx0 / gs) * gs; gx <= wx1; gx += gs) {
+        const [sx, sy] = w2s(gx, 0); if (sy < -20 || sy > canv.height + 20) continue;
+        c.fillText(Math.round(gx), sx - 12, sy + 16);
+      }
+      for (let gy = Math.ceil(wy0 / gs) * gs; gy <= wy1; gy += gs) {
+        const [sx, sy] = w2s(0, gy); if (sx < -50 || sx > canv.width + 50) continue;
+        c.textAlign = 'right'; c.fillText(Math.round(gy), sx - 4, sy + 3); c.textAlign = 'start';
+      }
+      c.fillStyle = 'rgba(0,212,245,.2)'; c.fillText('×' + sc.toFixed(3), canv.width - 68, canv.height - 5);
+      c.restore();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // DETAIL PANEL
+    // ════════════════════════════════════════════════════════
+    function sizeDetailCanvas() {
+      const dw = document.getElementById('detailWrap');
+      const dc = document.getElementById('detailCanvas');
+      const hdr = dw.querySelector('.detail-hdr');
+      // Reading offsetWidth forces a synchronous reflow — dimensions are correct after this
+      const w = dw.offsetWidth;
+      const h = dw.offsetHeight - hdr.offsetHeight;
+      dc.width = Math.max(10, w);
+      dc.height = Math.max(10, h);
+      return dc;
+    }
+
+    function showDetail(d, idx) {
+      selStep = idx;
+      document.getElementById('detailTitle').textContent = 'DETALLE — ESCALÓN #' + d.steps[idx].num;
+      const dw = document.getElementById('detailWrap');
+      dw.classList.add('show');
+      // Reading offsetWidth HERE forces the browser to reflow and compute the new flex layout
+      void dw.offsetWidth;
+      const dc = sizeDetailCanvas();
+      drawDetailView(dc, dc.getContext('2d'), d, idx);
+      draw(); // update main canvas selection highlight
+    }
+    function closeDetail() {
+      document.getElementById('detailWrap').classList.remove('show');
+      selStep = -1; draw();
+    }
+    function redrawDetail() {
+      if (selStep < 0) return;
+      const dw = document.getElementById('detailWrap');
+      if (!dw.classList.contains('show')) return;
+      const dc = sizeDetailCanvas();
+      if (dc.width > 10 && dc.height > 10)
+        drawDetailView(dc, dc.getContext('2d'), calc(), selStep);
+    }
+
+    function drawDetailView(dc, c, d, idx) {
+      const W = dc.width, H = dc.height;
+      if (W <= 1 || H <= 1) return;
+      c.clearRect(0, 0, W, H);
+
+      const s = d.steps[idx];
+      const { tY, corta, larga, tanA, ang, cosA } = d;
+      const hw = P.sopA / 2, chw = P.chapaL / 2;
+
+      // World bounds: include step, soporte, portion of troncal
+      const tronBot = tY(s.cx) - P.tronA * cosA - 30;
+      const wxMin = s.xI - hw * 3 - 30;
+      const wxMax = s.xF + hw * 3 + 30;
+      const wyMin = Math.min(tronBot, -20);
+      const wyMax = s.yF + P.altoEsc * 0.4 + 20;
+
+      const wW = wxMax - wxMin, wH = wyMax - wyMin;
+      const pad = 55;
+      const sc = Math.min((W - pad * 2) / wW, (H - pad * 2) / wH);
+      const ox = W / 2 - (wxMin + wW / 2) * sc;
+      const oy = H / 2 + (wyMin + wH / 2) * sc;
+
+      const w2s = (wx, wy) => [ox + wx * sc, H - (oy + wy * sc)];
+
+      // Grid
+      drawGrid(c, { width: W, height: H }, w2s, (sx, sy) => [(sx - ox) / sc, (H - sy - oy) / sc], sc);
+
+      // ─ Troncal (local slice) ─────────────────────────────
+      const tX1 = s.cx - P.largoEsc * 0.9, tX2 = s.cx + P.largoEsc * 0.9;
+      const tPts = [
+        [tX1, tY(tX1)], [tX2, tY(tX2)],
+        [tX2, tY(tX2) - P.tronA * cosA], [tX1, tY(tX1) - P.tronA * cosA]
+      ];
+      c.save();
+      c.beginPath(); const [tp0x, tp0y] = w2s(tPts[0][0], tPts[0][1]); c.moveTo(tp0x, tp0y);
+      for (let i = 1; i < 4; i++) { const [tx, ty] = w2s(tPts[i][0], tPts[i][1]); c.lineTo(tx, ty); }
+      c.closePath();
+      c.fillStyle = 'rgba(200,110,20,.22)'; c.fill();
+      c.strokeStyle = 'rgba(255,150,40,.9)'; c.lineWidth = 2; c.stroke();
+      // troncal label
+      const [tlx, tly] = w2s(s.cx, tY(s.cx) - P.tronA * cosA / 2);
+      c.fillStyle = 'rgba(255,150,40,.9)'; c.font = 'bold 11px Share Tech Mono'; c.textAlign = 'center';
+      c.fillText('TRONCAL ' + P.tronA + '×' + P.tronB, tlx, tly + 4); c.textAlign = 'start';
+      c.restore();
+
+      // ─ Soporte ───────────────────────────────────────────
+      if (idx < P.nSteps - 1) {
+        const chapaBot = s.yI + P.embutido;
+        // Soporte top meets chapa bottom
+        const sop = [[s.cx - hw, chapaBot], [s.cx + hw, chapaBot], [s.cx + hw, tY(s.cx + hw)], [s.cx - hw, tY(s.cx - hw)]];
+        c.save();
+        c.beginPath(); const [sp0x, sp0y] = w2s(sop[0][0], sop[0][1]); c.moveTo(sp0x, sp0y);
+        for (let k = 1; k < 4; k++) { const [sx2, sy2] = w2s(sop[k][0], sop[k][1]); c.lineTo(sx2, sy2); }
+        c.closePath();
+        c.fillStyle = 'rgba(0,160,240,.2)'; c.fill();
+        c.strokeStyle = 'rgba(0,200,255,.95)'; c.lineWidth = 2; c.stroke();
+        c.restore();
+
+        // ─ Chapa (embedded inside step wood, embutido mm above bottom face) ──
+        const chapaTop = chapaBot + P.chapaE;
+        const [cx1, cy1] = w2s(s.cx - chw, chapaTop);
+        const [cx2, cy2] = w2s(s.cx + chw, chapaBot);
+        c.save();
+        c.fillStyle = 'rgba(0,220,160,.35)'; c.fillRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+        c.strokeStyle = 'rgba(0,220,160,.95)'; c.lineWidth = 2; c.strokeRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+        c.restore();
+      }
+
+      // ─ Escalón (con muesca embutido) ────────────────────
+      const [estx1, esty1] = w2s(s.xI, s.yF), [estx2, esty2] = w2s(s.xF, s.yI);
+      c.save();
+      if (idx < P.nSteps - 1 && P.embutido > 0) {
+        const cBot = s.yI + P.embutido;
+        const [nL,] = w2s(s.cx - chw, 0);
+        const [nR,] = w2s(s.cx + chw, 0);
+        const [, nY] = w2s(0, cBot);
+        c.beginPath();
+        c.moveTo(estx1, esty1);
+        c.lineTo(estx2, esty1);
+        c.lineTo(estx2, esty2);
+        c.lineTo(nR, esty2);
+        c.lineTo(nR, nY);
+        c.lineTo(nL, nY);
+        c.lineTo(nL, esty2);
+        c.lineTo(estx1, esty2);
+        c.closePath();
+        c.fillStyle = 'rgba(10,28,50,.95)'; c.fill();
+        c.strokeStyle = '#00d4f5'; c.lineWidth = 2; c.stroke();
+      } else {
+        c.fillStyle = 'rgba(10,28,50,.95)'; c.fillRect(estx1, esty1, estx2 - estx1, esty2 - esty1);
+        c.strokeStyle = '#00d4f5'; c.lineWidth = 2; c.strokeRect(estx1, esty1, estx2 - estx1, esty2 - esty1);
+      }
+      c.fillStyle = 'rgba(0,212,245,.35)'; c.font = 'bold 12px Share Tech Mono'; c.textAlign = 'center';
+      c.fillText('#' + s.num, (estx1 + estx2) / 2, (esty1 + esty2) / 2 + 4); c.textAlign = 'start';
+      c.restore();
+
+      // ════════════════════════════════════════════════════════
+      // DIMENSION ANNOTATIONS
+      // ════════════════════════════════════════════════════════
+      c.save();
+      c.font = '10px Share Tech Mono'; c.lineWidth = 1;
+
+      // Helper: draw a dimension line with arrows and text
+      // Vertical dim
+      const dimV = (x, y1, y2, txt, col, side) => {
+        // extension lines
+        const xOff = x + (side > 0 ? 22 : -22);
+        const [sx, sy1s] = w2s(x, y1), [, sy2s] = w2s(x, y2);
+        const [sxO,] = w2s(x + (side > 0 ? 4 : -4), y1);
+        c.strokeStyle = col; c.lineWidth = 1; c.setLineDash([2, 4]);
+        c.beginPath(); c.moveTo(sx, sy1s); c.lineTo(w2s(x + (side > 0 ? 26 : -26), y1)[0], sy1s); c.stroke();
+        c.beginPath(); c.moveTo(sx, sy2s); c.lineTo(w2s(x + (side > 0 ? 26 : -26), y2)[0], sy2s); c.stroke();
+        c.setLineDash([]);
+        const [lx2,] = w2s(x + (side > 0 ? 24 : -24), y1);
+        c.beginPath(); c.moveTo(lx2, sy1s); c.lineTo(lx2, sy2s);
+        // arrows
+        c.moveTo(lx2 - 4, sy1s + (sy1s < sy2s ? 7 : -7)); c.lineTo(lx2, sy1s); c.lineTo(lx2 + 4, sy1s + (sy1s < sy2s ? 7 : -7));
+        c.moveTo(lx2 - 4, sy2s + (sy2s < sy1s ? 7 : -7)); c.lineTo(lx2, sy2s); c.lineTo(lx2 + 4, sy2s + (sy2s < sy1s ? 7 : -7));
+        c.stroke();
+        c.fillStyle = col; c.save(); c.translate(lx2 + (side > 0 ? 12 : -12), (sy1s + sy2s) / 2);
+        c.rotate(side > 0 ? Math.PI / 2 : -Math.PI / 2); c.textAlign = 'center'; c.fillText(txt, 0, 0); c.restore();
+      };
+      // Horizontal dim
+      const dimH = (x1, x2, y, txt, col, side) => {
+        const [sx1s, sy] = w2s(x1, y), [sx2s,] = w2s(x2, y);
+        const yOff = sy + (side > 0 ? 22 : -22);
+        c.strokeStyle = col; c.lineWidth = 1; c.setLineDash([2, 4]);
+        c.beginPath(); c.moveTo(sx1s, sy); c.lineTo(sx1s, sy + (side > 0 ? 26 : -26)); c.stroke();
+        c.beginPath(); c.moveTo(sx2s, sy); c.lineTo(sx2s, sy + (side > 0 ? 26 : -26)); c.stroke();
+        c.setLineDash([]);
+        c.beginPath(); c.moveTo(sx1s, yOff); c.lineTo(sx2s, yOff);
+        c.moveTo(sx1s + (sx1s < sx2s ? 6 : -6), yOff - 4); c.lineTo(sx1s, yOff); c.lineTo(sx1s + (sx1s < sx2s ? 6 : -6), yOff + 4);
+        c.moveTo(sx2s + (sx2s < sx1s ? 6 : -6), yOff - 4); c.lineTo(sx2s, yOff); c.lineTo(sx2s + (sx2s < sx1s ? 6 : -6), yOff + 4);
+        c.stroke();
+        c.fillStyle = col; c.textAlign = 'center'; c.fillText(txt, (sx1s + sx2s) / 2, yOff + (side > 0 ? 14 : -6)); c.textAlign = 'start';
+      };
+      // Small label near a point
+      const lbl = (wx, wy, txt, col, offX, offY) => {
+        const [sx, sy] = w2s(wx, wy);
+        c.fillStyle = col; c.font = '10px Share Tech Mono'; c.fillText(txt, sx + offX, sy + offY);
+      };
+
+      const CYN = 'rgba(0,212,245,.9)';
+      const SOP = 'rgba(0,200,255,.9)';
+      const CHP = 'rgba(0,220,160,.95)';
+      const TRN = 'rgba(255,150,40,.9)';
+
+      // 1. Largo escalón
+      dimH(s.xI, s.xF, s.yI, P.largoEsc + ' mm', CYN, 1);
+      // 2. Alto escalón
+      dimV(s.xF, s.yI, s.yF, P.altoEsc.toFixed(1) + ' mm', CYN, 1);
+      // 3. Pedada label
+      dimH(s.xI, s.xF, s.yF, 'pedada: ' + Math.round(s.xF - s.xI) + ' mm', CYN, -1);
+
+      if (idx < P.nSteps - 1) {
+        const chapaBot = s.yI + P.embutido;
+        const chapaTop = chapaBot + P.chapaE;
+        // 4. Chapa largo (at top face of chapa)
+        dimH(s.cx - chw, s.cx + chw, chapaTop, 'chapa: ' + P.chapaL + ' mm', CHP, -1);
+        // 5. Chapa espesor (right side)
+        dimV(s.cx + chw, chapaBot, chapaTop, 'e=' + P.chapaE, CHP, 1);
+        // 5b. Embutido depth — distance from step bottom face to chapa bottom
+        dimV(s.cx - chw - 2, s.yI, chapaBot, 'emb=' + P.embutido, CHP, -1);
+        // 6. Soporte ancho A
+        dimH(s.cx - hw, s.cx + hw, tY(s.cx), 'sopA: ' + P.sopA + ' mm', SOP, 1);
+        // 7. Corta (left side of soporte) — from chapa bottom to troncal
+        dimV(s.cx - hw, chapaBot, tY(s.cx - hw), 'C=' + corta.toFixed(1), SOP, -1);
+        // 8. Larga (right side of soporte) — from chapa bottom to troncal
+        dimV(s.cx + hw, chapaBot, tY(s.cx + hw), 'L=' + larga.toFixed(1), SOP, 1);
+        // 9. Luz mínima
+        lbl(s.cx, chapaBot, 'luz: ' + P.luzMin + ' mm', TRN, 4, -4);
+      }
+
+      // 10. Troncal height A
+      dimV(s.cx - P.largoEsc * 0.85, tY(s.cx - P.largoEsc * 0.85), tY(s.cx - P.largoEsc * 0.85) - P.tronA * cosA, 'A=' + P.tronA, TRN, -1);
+
+      // Reference lines in detail
+      c.setLineDash([4, 4]); c.strokeStyle = 'rgba(0,212,245,.2)'; c.lineWidth = 1;
+      const [fsx1, fsy] = w2s(wxMin, 0), [fsx2,] = w2s(wxMax, 0);
+      c.beginPath(); c.moveTo(fsx1, fsy); c.lineTo(fsx2, fsy); c.stroke();
+      c.setLineDash([]);
+      c.fillStyle = 'rgba(0,212,245,.3)'; c.font = '9px Share Tech Mono'; c.textAlign = 'center';
+      c.fillText('PISO  y=0', fsx2 - 30, fsy + 12); c.textAlign = 'start';
+
+      c.restore();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // MOUSE EVENTS (main canvas)
+    // ════════════════════════════════════════════════════════
+    mcv.addEventListener('mousemove', e => {
+      if (panning) return;
+      const r = mcv.getBoundingClientRect();
+      const sx = e.clientX - r.left, sy = e.clientY - r.top;
+      const [wx, wy] = S2W(sx, sy);
+      const d = calc();
+
+      if (measureMode) {
+        const newSnap = findSnap(sx, sy);
+        if (newSnap !== snapNode) { snapNode = newSnap; draw(); }
+        mcv.style.cursor = snapNode ? 'crosshair' : 'crosshair';
+        return;
+      }
+
+      const nh = d.steps.findIndex(s => wx >= s.xI && wx <= s.xF && wy >= s.yI && wy <= s.yF);
+      if (nh !== hovStep) { hovStep = nh; draw(); }
+      mcv.style.cursor = nh >= 0 ? 'pointer' : 'default';
+    });
+
+    mcv.addEventListener('mouseleave', () => {
+      if (!measureMode) { hovStep = -1; draw(); }
+      snapNode = null;
+    });
+
+    mcv.addEventListener('click', e => {
+      if (panning) return;
+      const r = mcv.getBoundingClientRect();
+      const sx = e.clientX - r.left, sy = e.clientY - r.top;
+
+      if (measureMode) {
+        if (!snapNode) return;
+        if (!measureP1) {
+          measureP1 = { ...snapNode }; draw();
+        } else if (!measureP2) {
+          measureP2 = { ...snapNode }; draw();
+        } else {
+          // Reset and start new measurement
+          measureP1 = { ...snapNode }; measureP2 = null;
+          document.getElementById('measureBox').style.display = 'none';
+          draw();
+        }
+        return;
+      }
+
+      // Normal mode: click step to open detail
+      const [wx, wy] = S2W(sx, sy);
+      const d = calc();
+      const idx = d.steps.findIndex(s => wx >= s.xI && wx <= s.xF && wy >= s.yI && wy <= s.yF);
+      if (idx >= 0) { showDetail(d, idx); draw(); }
+    });
+
+    // ════════════════════════════════════════════════════════
+    // UI UPDATES
+    // ════════════════════════════════════════════════════════
+    function updateUI(d) {
+      const { alzada, pedada, ang, blondel, steps, longTronc, corta, larga } = d;
+      const angD = ang * 180 / Math.PI;
+      const aB = alzada < 150 || alzada > 200, pB = pedada < 250 || pedada > 300;
+      const bB = Math.abs(blondel - 630) > 20, gB = angD < 30 || angD > 40;
+      g('h-alz').textContent = alzada.toFixed(1); g('h-alz').style.color = aB ? 'var(--red)' : 'var(--cyan)';
+      g('h-ped').textContent = pedada.toFixed(1); g('h-ped').style.color = pB ? 'var(--amber)' : 'var(--cyan)';
+      g('h-ang').textContent = angD.toFixed(1); g('h-ang').style.color = gB ? 'var(--amber)' : 'var(--tbright)';
+      g('h-blo').textContent = blondel.toFixed(0); g('h-blo').style.color = bB ? 'var(--red)' : 'var(--green)';
+      const bad = aB || pB || bB || gB;
+      const bdg = g('h-badge'); bdg.className = 'badge ' + (bad ? 'warn' : 'ok'); bdg.textContent = bad ? 'REVISAR' : 'OK';
+      sD('d-alz', alzada.toFixed(2) + ' mm', !aB, aB);
+      sD('d-ped', pedada.toFixed(2) + ' mm', !pB, pB);
+      sD('d-blo', blondel.toFixed(1) + ' mm', !bB, bB);
+      sD('d-ang', angD.toFixed(2) + ' °', !gB, gB);
+      g('d-tronc').textContent = longTronc.toFixed(0) + ' mm'; g('d-tronc').className = 'dval';
+      g('d-corta').textContent = corta.toFixed(2) + ' mm'; g('d-corta').className = 'dval ok';
+      g('d-larga').textContent = larga.toFixed(2) + ' mm'; g('d-larga').className = 'dval ok';
+      const exc = P.largoTotal > P.largoDisp;
+      sD('d-exc', exc ? 'SÍ (+' + (P.largoTotal - P.largoDisp) + 'mm)' : 'NO', !exc, exc);
+      const minCl = Math.min(...steps.map(s => P.altTotal - s.yF));
+      sD('d-lib', Math.round(minCl) + ' mm', minCl >= 2100, minCl >= 1900 && minCl < 2100);
+
+      const tb = g('stbl'); tb.innerHTML = '';
+      steps.forEach((s, i) => {
+        const libre = Math.round(P.altTotal - s.yF), ok = libre >= 2100;
+        const tr = document.createElement('tr');
+        if (i === hovStep) tr.classList.add('hov');
+        if (i === selStep) tr.classList.add('sel');
+        tr.innerHTML = `<td>${s.num}</td><td>${Math.round(s.cx)}</td>` +
+          `<td>${i < P.nSteps - 1 ? corta.toFixed(1) : '—'}</td>` +
+          `<td>${i < P.nSteps - 1 ? larga.toFixed(1) : '—'}</td>` +
+          `<td style="color:${ok ? 'var(--green)' : 'var(--amber)'}">${libre}</td>`;
+        tr.addEventListener('mouseenter', () => { hovStep = i; draw(); });
+        tr.addEventListener('mouseleave', () => { hovStep = -1; draw(); });
+        tr.addEventListener('click', () => { showDetail(calc(), i); draw(); });
+        tb.appendChild(tr);
+      });
+      g('cinfo').textContent = `${P.nSteps} esc · troncal ${longTronc.toFixed(0)}mm · ×${T.sc.toFixed(3)}`;
+    }
+    function g(id) { return document.getElementById(id); }
+    function sD(id, v, ok, bad) { const e = g(id); e.textContent = v; e.className = 'dval' + (ok ? ' ok' : bad ? ' err' : ' warn'); }
+
+    // ════════════════════════════════════════════════════════
+    // SLIDERS
+    // ════════════════════════════════════════════════════════
+    [['nSteps', 'nSteps'], ['altTotal', 'altTotal'], ['largoTotal', 'largoTotal'],
+    ['largoDisp', 'largoDisp'], ['largoEsc', 'largoEsc'], ['altoEsc', 'altoEsc'],
+    ['cielorraso', 'cielorraso'], ['anchoHueco', 'anchoHueco'],
+    ['tronA', 'tronA'], ['tronB', 'tronB'], ['luzMin', 'luzMin'],
+    ['sopA', 'sopA'], ['sopB', 'sopB'],
+    ['chapaL', 'chapaL'], ['chapaE', 'chapaE'], ['embutido', 'embutido'],
+    ['v1x1', 'v1x1'], ['v1x2', 'v1x2'], ['v1y1', 'v1y1'], ['v1y2', 'v1y2'],
+    ['v2x1', 'v2x1'], ['v2x2', 'v2x2'], ['v2y1', 'v2y1'], ['v2y2', 'v2y2'],
+    ].forEach(([id, key]) => {
+      const el = g('s-' + id); if (!el) return;
+      el.addEventListener('input', () => {
+        const v = parseFloat(el.value); P[key] = v;
+        const sv = g('sv-' + id); if (sv) sv.textContent = Number.isInteger(v) ? v : parseFloat(v.toFixed(1));
+        draw(); if (selStep >= 0) redrawDetail();
+      });
+    });
+    function tog(k) { opts[k] = !opts[k]; g('opt-' + k).classList.toggle('on', opts[k]); draw(); }
+  </script>
+</body>
+
+</html>
