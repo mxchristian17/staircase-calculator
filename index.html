@@ -744,6 +744,36 @@
         </div>
       </div>
       <div>
+        <div class="sec">Chapa Base (Piso)</div>
+        <div class="pg">
+          <div class="psr">
+            <div class="pst"><span class="psl">Largo chapa (hacia izq)</span><span class="psv"><span
+                  id="sv-chapaBaseL">400</span><span class="u"> mm</span></span></div><input type="range"
+              id="s-chapaBaseL" min="100" max="1000" step="10" value="400">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Espesor chapa</span><span class="psv"><span
+                  id="sv-chapaBaseE">5</span><span class="u"> mm</span></span></div><input type="range"
+              id="s-chapaBaseE" min="3" max="20" step="1" value="5">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Chapa Superior (Pared)</div>
+        <div class="pg">
+          <div class="psr">
+            <div class="pst"><span class="psl">Largo chapa (vertical)</span><span class="psv"><span
+                  id="sv-chapaParedL">300</span><span class="u"> mm</span></span></div><input type="range"
+              id="s-chapaParedL" min="100" max="1000" step="10" value="300">
+          </div>
+          <div class="psr">
+            <div class="pst"><span class="psl">Espesor chapa</span><span class="psv"><span
+                  id="sv-chapaParedE">5</span><span class="u"> mm</span></span></div><input type="range"
+              id="s-chapaParedE" min="3" max="20" step="1" value="5">
+          </div>
+        </div>
+      </div>
+      <div>
         <div class="sec">Ventana 1</div>
         <div class="pg">
           <div class="psr">
@@ -874,6 +904,8 @@
       tronA: 120, tronB: 100, luzMin: 10,
       sopA: 100, sopB: 100,
       chapaL: 200, chapaE: 5, embutido: 70,
+      chapaBaseL: 400, chapaBaseE: 5,
+      chapaParedL: 300, chapaParedE: 5,
       v1x1: 2467, v1x2: 3093, v1y1: 165, v1y2: 2200,
       v2x1: 3378, v2x2: 3844, v2y1: 165, v2y2: 2200,
     };
@@ -1087,17 +1119,32 @@
           const sopL = s.cx - chw, sopR = sopL + P.sopA;
           add(sopL, chapaBot, `Sop${n} TL`);
           add(sopR, chapaBot, `Sop${n} TR`);
-          add(sopL, isFloor ? 0 : d.tY(sopL), `Sop${n} BL`);
-          add(sopR, isFloor ? 0 : d.tY(sopR), `Sop${n} BR`);
+          add(sopL, isFloor ? P.chapaBaseE : d.tY(sopL), `Sop${n} BL`);
+          add(sopR, isFloor ? P.chapaBaseE : d.tY(sopR), `Sop${n} BR`);
           // Chapa corners (inside step)
           add(s.cx - chw, chapaBot, `Chapa${n} BL`);
           add(s.cx + chw, chapaBot, `Chapa${n} BR`);
           add(s.cx - chw, chapaBot + P.chapaE, `Chapa${n} TL`);
           add(s.cx + chw, chapaBot + P.chapaE, `Chapa${n} TR`);
+          if (isFloor) {
+            add(sopR - P.chapaBaseL, P.chapaBaseE, `ChapaBase TL`);
+            add(sopR, P.chapaBaseE, `ChapaBase TR`);
+            add(sopR - P.chapaBaseL, 0, `ChapaBase BL`);
+            add(sopR, 0, `ChapaBase BR`);
+          }
         }
       });
       // Troncal corners
       d.TC.forEach((pt, i) => add(pt[0], pt[1], `Tronc[${i}]`));
+      if (opts.chapas) {
+        const midY = (d.TC[0][1] + d.TC[3][1]) / 2;
+        const bHTop = midY + P.chapaParedL / 2;
+        const bHBot = midY - P.chapaParedL / 2;
+        add(0, bHTop, `ChapaPared TL`);
+        add(P.chapaParedE, bHTop, `ChapaPared TR`);
+        add(0, bHBot, `ChapaPared BL`);
+        add(P.chapaParedE, bHBot, `ChapaPared BR`);
+      }
       return nodes;
     }
 
@@ -1248,18 +1295,21 @@
       const xRef = steps[0].xF - P.largoEsc;
       const yRef = steps[0].yI - P.luzMin;
       const tY = x => yRef - tanA * (x - xRef);
-      // Troncal is cut horizontally at the floor (y=0)
+      // Troncal is cut horizontally at the top of the base plate (y = P.chapaBaseE)
+      // and vertically at the right face of the wall plate (x = P.chapaParedE)
       const verticalThickness = P.tronA / cosA;
       const tY_bottom = x => tY(x) - verticalThickness;
-      const xTopFloor = xRef + yRef / tanA;
-      const xBotFloor = xRef + (yRef - verticalThickness) / tanA;
+      const tronFloor = P.chapaBaseE;
+      const tronWall = P.chapaParedE;
+      const xTopFloor = xRef + (yRef - tronFloor) / tanA;
+      const xBotFloor = xRef + (yRef - verticalThickness - tronFloor) / tanA;
       const TC = [
-        [0, tY(0)],  // TL
-        [xTopFloor, 0],  // TR (floor)
-        [xBotFloor, 0],  // BR (floor)
-        [0, tY_bottom(0)],  // BL
+        [tronWall, tY(tronWall)],  // TL
+        [xTopFloor, tronFloor],  // TR (base plate)
+        [xBotFloor, tronFloor],  // BR (base plate)
+        [tronWall, tY_bottom(tronWall)],  // BL
       ];
-      const longTronc = Math.hypot(xTopFloor, tY(0) - 0);
+      const longTronc = Math.hypot(xTopFloor - tronWall, tY(tronWall) - tronFloor);
       // Soporte llega hasta la base de la chapa (yI + embutido - chapaE), no la base de la madera (yI)
       const chw = P.chapaL / 2;
       // The chapa bottom is at s.yI + P.embutido - P.chapaE. 
@@ -1272,7 +1322,10 @@
       const sopR0 = sopL0 + P.sopA;
       const corta = chapaBot0 - tY(sopL0);
       const larga = chapaBot0 - tY(sopR0);
-      return { alzada, pedada, ang, cosA, sinA, tanA, blondel, steps, tY, TC, longTronc, corta, larga };
+      const sLast = steps[P.nSteps - 1];
+      const chapaBotLast = sLast.yI + P.embutido - P.chapaE;
+      const cortaPiso = chapaBotLast - P.chapaBaseE;
+      return { alzada, pedada, ang, cosA, sinA, tanA, blondel, steps, tY, TC, longTronc, corta, larga, cortaPiso };
     }
 
     // ════════════════════════════════════════════════════════
@@ -1397,6 +1450,19 @@
       c.fillStyle = 'rgba(255,155,40,.9)'; c.font = '9px Share Tech Mono'; c.textAlign = 'center';
       c.fillText('TRONCAL ' + P.tronA + '×' + P.tronB, 0, 4); c.restore();
       c.restore();
+
+      // Chapa Pared (Superior)
+      if (opts.chapas) {
+        const midY = (TC[0][1] + TC[3][1]) / 2;
+        const bY1 = midY + P.chapaParedL / 2;
+        const bY2 = midY - P.chapaParedL / 2;
+        const [cx1, cy1] = w2s(0, bY1);
+        const [cx2, cy2] = w2s(P.chapaParedE, bY2);
+        c.save();
+        c.fillStyle = 'rgba(0,220,160,.28)'; c.fillRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+        c.strokeStyle = 'rgba(0,220,160,.85)'; c.lineWidth = 1.5; c.strokeRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+        c.restore();
+      }
     }
 
     // ── Soportes + Chapas ────────────────────────────────────
@@ -1409,8 +1475,8 @@
         const chapaBot = s.yI + P.embutido - P.chapaE;
         // Soporte trapezoid — left edge at chapa left edge
         const sopL = s.cx - chw, sopR = sopL + P.sopA;
-        const subY_L = isFloor ? 0 : tY(sopL);
-        const subY_R = isFloor ? 0 : tY(sopR);
+        const subY_L = isFloor ? P.chapaBaseE : tY(sopL);
+        const subY_R = isFloor ? P.chapaBaseE : tY(sopR);
         const pts = [[sopL, chapaBot], [sopR, chapaBot], [sopR, subY_R], [sopL, subY_L]];
         c.save();
         c.beginPath(); const [sp0x, sp0y] = w2s(pts[0][0], pts[0][1]); c.moveTo(sp0x, sp0y);
@@ -1420,19 +1486,32 @@
         c.strokeStyle = isSel ? '#00d4f5' : isH ? 'rgba(0,200,255,.8)' : 'rgba(0,180,255,.5)';
         c.lineWidth = isH || isSel ? 2 : 1; c.stroke();
         const sopMid = sopL + P.sopA / 2;
-        const [cxt, cyt] = w2s(sopMid, chapaBot), [cxb, cyb] = w2s(sopMid, isFloor ? 0 : tY(sopMid));
+        const [cxt, cyt] = w2s(sopMid, chapaBot), [cxb, cyb] = w2s(sopMid, isFloor ? P.chapaBaseE : tY(sopMid));
         c.strokeStyle = 'rgba(0,180,255,.18)'; c.lineWidth = 1; c.setLineDash([2, 3]);
         c.beginPath(); c.moveTo(cxt, cyt); c.lineTo(cxb, cyb); c.stroke(); c.setLineDash([]);
         if (isH) {
           c.fillStyle = '#00d4f5'; c.font = 'bold 10px Share Tech Mono';
           const [blx, bly] = w2s(sopL - 8 / T.sc, (chapaBot + subY_L) / 2);
           const [brx, bry] = w2s(sopR + 4 / T.sc, (chapaBot + subY_R) / 2);
-          const c_txt = isFloor ? chapaBot.toFixed(1) : corta.toFixed(1);
-          const l_txt = isFloor ? chapaBot.toFixed(1) : larga.toFixed(1);
+          const c_txt = isFloor ? d.cortaPiso.toFixed(1) : corta.toFixed(1);
+          const l_txt = isFloor ? d.cortaPiso.toFixed(1) : larga.toFixed(1);
           c.textAlign = 'right'; c.fillText('C:' + c_txt, blx, bly);
           c.textAlign = 'left'; c.fillText('L:' + l_txt, brx, bry); c.textAlign = 'start';
         }
         c.restore();
+
+        // Chapa Base (Piso)
+        if (isFloor && opts.chapas) {
+          const bX1 = sopR - P.chapaBaseL;
+          const bX2 = sopR;
+          const [cx1, cy1] = w2s(bX1, P.chapaBaseE);
+          const [cx2, cy2] = w2s(bX2, 0);
+          c.save();
+          c.fillStyle = 'rgba(0,220,160,.28)'; c.fillRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+          c.strokeStyle = 'rgba(0,220,160,.85)'; c.lineWidth = 1.5; c.strokeRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+          c.restore();
+        }
+
         // Chapa: embedded inside step wood.
         if (opts.chapas) {
           const chapaTop = chapaBot + P.chapaE;
@@ -1638,8 +1717,8 @@
         const chapaBot = s.yI + P.embutido - P.chapaE;
         // Soporte left edge at chapa left edge
         const sopL = s.cx - chw, sopR = sopL + P.sopA;
-        const subY_L = isFloor ? 0 : tY(sopL);
-        const subY_R = isFloor ? 0 : tY(sopR);
+        const subY_L = isFloor ? P.chapaBaseE : tY(sopL);
+        const subY_R = isFloor ? P.chapaBaseE : tY(sopR);
         const sop = [[sopL, chapaBot], [sopR, chapaBot], [sopR, subY_R], [sopL, subY_L]];
         c.save();
         c.beginPath(); const [sp0x, sp0y] = w2s(sop[0][0], sop[0][1]); c.moveTo(sp0x, sp0y);
@@ -1648,6 +1727,17 @@
         c.fillStyle = 'rgba(0,160,240,.2)'; c.fill();
         c.strokeStyle = 'rgba(0,200,255,.95)'; c.lineWidth = 2; c.stroke();
         c.restore();
+
+        if (isFloor) {
+          const bX1 = sopR - P.chapaBaseL;
+          const bX2 = sopR;
+          const [cx1, cy1] = w2s(bX1, P.chapaBaseE);
+          const [cx2, cy2] = w2s(bX2, 0);
+          c.save();
+          c.fillStyle = 'rgba(0,220,160,.35)'; c.fillRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+          c.strokeStyle = 'rgba(0,220,160,.95)'; c.lineWidth = 2; c.strokeRect(cx1, cy1, cx2 - cx1, cy2 - cy1);
+          c.restore();
+        }
 
         // ─ Chapa (embedded inside step wood, embutido mm above bottom face) ──
         const chapaTop = chapaBot + P.chapaE;
@@ -1759,16 +1849,20 @@
         // 6. Soporte ancho A
         const sopL = s.cx - chw, sopR = sopL + P.sopA;
         const sopMid = sopL + P.sopA / 2;
-        const subY_L = isFloor ? 0 : tY(sopL);
-        const subY_R = isFloor ? 0 : tY(sopR);
-        dimH(sopL, sopR, isFloor ? 0 : tY(sopMid), 'sopA: ' + P.sopA + ' mm', SOP, 1);
+        const subY_L = isFloor ? P.chapaBaseE : tY(sopL);
+        const subY_R = isFloor ? P.chapaBaseE : tY(sopR);
+        dimH(sopL, sopR, isFloor ? P.chapaBaseE : tY(sopMid), 'sopA: ' + P.sopA + ' mm', SOP, 1);
         // 7. Corta (left side of soporte)
-        dimV(sopL, chapaBot, subY_L, 'C=' + (isFloor ? chapaBot.toFixed(1) : corta.toFixed(1)), SOP, -1);
+        dimV(sopL, chapaBot, subY_L, 'C=' + (isFloor ? (chapaBot - P.chapaBaseE).toFixed(1) : corta.toFixed(1)), SOP, -1);
         // 8. Larga (right side of soporte)
-        dimV(sopR, chapaBot, subY_R, 'L=' + (isFloor ? chapaBot.toFixed(1) : larga.toFixed(1)), SOP, 1);
+        dimV(sopR, chapaBot, subY_R, 'L=' + (isFloor ? (chapaBot - P.chapaBaseE).toFixed(1) : larga.toFixed(1)), SOP, 1);
         if (!isFloor) {
           // 9. Luz mínima
           lbl(sopMid, chapaBot, 'luz: ' + P.luzMin + ' mm', TRN, 4, -4);
+        } else {
+          // Base plate
+          dimV(sopR - P.chapaBaseL, 0, P.chapaBaseE, 'e=' + P.chapaBaseE, CHP, -1);
+          dimH(sopR - P.chapaBaseL, sopR, P.chapaBaseE, 'base: ' + P.chapaBaseL + ' mm', CHP, 1);
         }
       }
 
@@ -1844,7 +1938,7 @@
     // UI UPDATES
     // ════════════════════════════════════════════════════════
     function updateUI(d) {
-      const { alzada, pedada, ang, blondel, steps, longTronc, corta, larga } = d;
+      const { alzada, pedada, ang, blondel, steps, longTronc, corta, larga, cortaPiso } = d;
       const angD = ang * 180 / Math.PI;
       const aB = alzada < 150 || alzada > 200, pB = pedada < 250 || pedada > 300;
       const bB = Math.abs(blondel - 630) > 20, gB = angD < 30 || angD > 40;
@@ -1873,8 +1967,8 @@
         if (i === hovStep) tr.classList.add('hov');
         if (i === selStep) tr.classList.add('sel');
         tr.innerHTML = `<td>${s.num}</td><td>${Math.round(s.cx)}</td>` +
-          `<td>${i < P.nSteps - 1 ? corta.toFixed(1) : (steps[P.nSteps - 1].yI + P.embutido - P.chapaE).toFixed(1)}</td>` +
-          `<td>${i < P.nSteps - 1 ? larga.toFixed(1) : (steps[P.nSteps - 1].yI + P.embutido - P.chapaE).toFixed(1)}</td>` +
+          `<td>${i < P.nSteps - 1 ? corta.toFixed(1) : cortaPiso.toFixed(1)}</td>` +
+          `<td>${i < P.nSteps - 1 ? larga.toFixed(1) : cortaPiso.toFixed(1)}</td>` +
           `<td style="color:${ok ? 'var(--green)' : 'var(--amber)'}">${libre}</td>`;
         tr.addEventListener('mouseenter', () => { hovStep = i; draw(); });
         tr.addEventListener('mouseleave', () => { hovStep = -1; draw(); });
@@ -1897,6 +1991,8 @@
     ['chapaL', 'chapaL'], ['chapaE', 'chapaE'], ['embutido', 'embutido'],
     ['v1x1', 'v1x1'], ['v1x2', 'v1x2'], ['v1y1', 'v1y1'], ['v1y2', 'v1y2'],
     ['v2x1', 'v2x1'], ['v2x2', 'v2x2'], ['v2y1', 'v2y1'], ['v2y2', 'v2y2'],
+    ['chapaBaseL', 'chapaBaseL'], ['chapaBaseE', 'chapaBaseE'],
+    ['chapaParedL', 'chapaParedL'], ['chapaParedE', 'chapaParedE'],
     ].forEach(([id, key]) => {
       const el = g('s-' + id); if (!el) return;
       el.addEventListener('input', () => {
