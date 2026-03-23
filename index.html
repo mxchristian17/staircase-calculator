@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Calculadora de Escalera</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
@@ -485,6 +486,135 @@
       scrollbar-width: thin;
       scrollbar-color: var(--border) transparent
     }
+
+    /* ── Mobile toggle bar ─────────────────────────── */
+    .mobile-bar {
+      display: none;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .mobile-bar .tb {
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      padding: 6px 4px
+    }
+
+    /* ── Mobile responsive ─────────────────────────── */
+    @media (max-width: 768px) {
+      body {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: auto
+      }
+
+      header {
+        padding: 6px 10px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px
+      }
+
+      .htitle {
+        font-size: 14px;
+        letter-spacing: 2px
+      }
+
+      .metrics {
+        gap: 8px;
+        flex-wrap: wrap
+      }
+
+      .mt {
+        min-width: 60px
+      }
+
+      .mv {
+        font-size: 12px
+      }
+
+      .mobile-bar {
+        display: flex
+      }
+
+      .main {
+        flex-direction: column;
+        overflow: visible;
+        min-height: 0
+      }
+
+      .params {
+        width: 100%;
+        max-height: 45vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        display: none;
+        overflow-y: auto
+      }
+
+      .params.mob-show {
+        display: flex
+      }
+
+      .carea {
+        width: 100%;
+        min-height: 55vh;
+        min-height: 55dvh
+      }
+
+      .ctb {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        gap: 3px;
+        padding: 5px 6px
+      }
+
+      .ctb .tb {
+        font-size: 9px;
+        padding: 3px 5px;
+        flex-shrink: 0
+      }
+
+      .hint {
+        display: none
+      }
+
+      .detail-wrap {
+        width: 100% !important;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        max-height: 50vh
+      }
+
+      .tpanel {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        display: none;
+        max-height: 45vh;
+        overflow-y: auto
+      }
+
+      .tpanel.mob-show {
+        display: block
+      }
+
+      /* bigger touch targets for sliders */
+      input[type=range] {
+        height: 6px
+      }
+
+      input[type=range]::-webkit-slider-thumb {
+        width: 18px;
+        height: 18px
+      }
+    }
   </style>
 </head>
 
@@ -500,6 +630,11 @@
       <div id="h-badge" class="badge ok">OK</div>
     </div>
   </header>
+  <!-- Mobile toggle bar -->
+  <div class="mobile-bar">
+    <button class="tb" id="mob-params" onclick="mobToggle('params')">⚙ Params</button>
+    <button class="tb" id="mob-tabla" onclick="mobToggle('tabla')">📊 Tabla</button>
+  </div>
   <div class="main">
 
     <!-- PARAMS -->
@@ -603,8 +738,8 @@
           </div>
           <div class="psr">
             <div class="pst"><span class="psl">Embutido en escalón</span><span class="psv"><span
-                  id="sv-embutido">8</span><span class="u"> mm</span></span></div><input type="range" id="s-embutido"
-              min="3" max="30" step="1" value="8">
+                  id="sv-embutido">70</span><span class="u"> mm</span></span></div><input type="range" id="s-embutido"
+              min="3" max="150" step="1" value="70">
           </div>
         </div>
       </div>
@@ -738,7 +873,7 @@
       largoEsc: 300, altoEsc: 101.6, cielorraso: 2410, anchoHueco: 880,
       tronA: 120, tronB: 100, luzMin: 10,
       sopA: 100, sopB: 100,
-      chapaL: 200, chapaE: 5, embutido: 8,
+      chapaL: 200, chapaE: 5, embutido: 70,
       v1x1: 2467, v1x2: 3093, v1y1: 165, v1y2: 2200,
       v2x1: 3378, v2x2: 3844, v2y1: 165, v2y2: 2200,
     };
@@ -794,6 +929,111 @@
     mcv.addEventListener('contextmenu', e => e.preventDefault());
 
     // ════════════════════════════════════════════════════════
+    // TOUCH EVENTS (mobile)
+    // ════════════════════════════════════════════════════════
+    let touchPanning = false, lastTouch = null;
+    let pinching = false, lastPinchDist = 0, lastPinchCenter = null;
+    let tapTimeout = null, lastTapTime = 0;
+
+    mcv.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const r = mcv.getBoundingClientRect();
+      if (e.touches.length === 2) {
+        pinching = true; touchPanning = false;
+        const t0 = e.touches[0], t1 = e.touches[1];
+        lastPinchDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+        lastPinchCenter = { x: (t0.clientX + t1.clientX) / 2 - r.left, y: (t0.clientY + t1.clientY) / 2 - r.top };
+      } else if (e.touches.length === 1) {
+        pinching = false; touchPanning = true;
+        lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }, { passive: false });
+
+    mcv.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const r = mcv.getBoundingClientRect();
+      if (pinching && e.touches.length === 2) {
+        const t0 = e.touches[0], t1 = e.touches[1];
+        const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+        const cx = (t0.clientX + t1.clientX) / 2 - r.left;
+        const cy = (t0.clientY + t1.clientY) / 2 - r.top;
+        if (lastPinchDist > 0) {
+          const f = dist / lastPinchDist;
+          zoomAt(cx, cy, f);
+        }
+        lastPinchDist = dist;
+        lastPinchCenter = { x: cx, y: cy };
+      } else if (touchPanning && e.touches.length === 1) {
+        const t = e.touches[0];
+        const dx = t.clientX - lastTouch.x;
+        const dy = t.clientY - lastTouch.y;
+        T.ox += dx; T.oy -= dy;
+        lastTouch = { x: t.clientX, y: t.clientY };
+        draw();
+      }
+    }, { passive: false });
+
+    mcv.addEventListener('touchend', e => {
+      if (e.touches.length === 0) {
+        if (pinching) { pinching = false; return; }
+        touchPanning = false;
+        // Tap detection
+        const now = Date.now();
+        if (now - lastTapTime < 300) {
+          // Double tap => fitView
+          clearTimeout(tapTimeout);
+          lastTapTime = 0;
+          fitView();
+        } else {
+          lastTapTime = now;
+          const ct = e.changedTouches[0];
+          const r = mcv.getBoundingClientRect();
+          const sx = ct.clientX - r.left, sy = ct.clientY - r.top;
+          tapTimeout = setTimeout(() => {
+            // Single tap => click on step
+            if (measureMode) {
+              const snap = findSnap(sx, sy);
+              if (snap) {
+                snapNode = snap;
+                if (!measureP1) { measureP1 = { ...snap }; draw(); }
+                else if (!measureP2) { measureP2 = { ...snap }; draw(); }
+                else { measureP1 = { ...snap }; measureP2 = null; document.getElementById('measureBox').style.display = 'none'; draw(); }
+              }
+            } else {
+              const [wx, wy] = S2W(sx, sy);
+              const d = calc();
+              const idx = d.steps.findIndex(s => wx >= s.xI && wx <= s.xF && wy >= s.yI && wy <= s.yF);
+              if (idx >= 0) { showDetail(d, idx); draw(); }
+            }
+          }, 300);
+        }
+      } else if (e.touches.length === 1) {
+        // Went from 2 fingers to 1: reset to pan
+        pinching = false; touchPanning = true;
+        lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    });
+
+    // Mobile panel toggles
+    function mobToggle(panel) {
+      const params = document.querySelector('.params');
+      const tpanel = document.querySelector('.tpanel');
+      if (panel === 'params') {
+        params.classList.toggle('mob-show');
+        tpanel.classList.remove('mob-show');
+        document.getElementById('mob-params').classList.toggle('on', params.classList.contains('mob-show'));
+        document.getElementById('mob-tabla').classList.remove('on');
+      } else {
+        tpanel.classList.toggle('mob-show');
+        params.classList.remove('mob-show');
+        document.getElementById('mob-tabla').classList.toggle('on', tpanel.classList.contains('mob-show'));
+        document.getElementById('mob-params').classList.remove('on');
+      }
+      // Trigger resize after panel toggle
+      setTimeout(resizeAll, 50);
+    }
+
+    // ════════════════════════════════════════════════════════
     // MEASURE TOOL
     // ════════════════════════════════════════════════════════
     let measureMode = false;
@@ -839,14 +1079,16 @@
         add(s.xF, s.yI, `Esc${n} BR`);
         add(s.cx, s.yI, `Esc${n} CX-bot`);
         add(s.cx, s.yF, `Esc${n} CX-top`);
-        if (i < P.nSteps - 1) {
+        {
           const hw = P.sopA / 2, chw = P.chapaL / 2;
-          const chapaBot = s.yI + P.embutido;
-          // Soporte corners — top meets chapa bottom
-          add(s.cx - hw, chapaBot, `Sop${n} TL`);
-          add(s.cx + hw, chapaBot, `Sop${n} TR`);
-          add(s.cx - hw, d.tY(s.cx - hw), `Sop${n} BL`);
-          add(s.cx + hw, d.tY(s.cx + hw), `Sop${n} BR`);
+          const chapaBot = s.yI + P.embutido - P.chapaE;
+          const isFloor = i === P.nSteps - 1;
+          // Soporte corners — left edge aligned with chapa left edge
+          const sopL = s.cx - chw, sopR = sopL + P.sopA;
+          add(sopL, chapaBot, `Sop${n} TL`);
+          add(sopR, chapaBot, `Sop${n} TR`);
+          add(sopL, isFloor ? 0 : d.tY(sopL), `Sop${n} BL`);
+          add(sopR, isFloor ? 0 : d.tY(sopR), `Sop${n} BR`);
           // Chapa corners (inside step)
           add(s.cx - chw, chapaBot, `Chapa${n} BL`);
           add(s.cx + chw, chapaBot, `Chapa${n} BR`);
@@ -1001,24 +1243,36 @@
         const yF = (P.nSteps + 1 - i) * alzada, yI = yF - P.altoEsc;
         steps.push({ num: i, xI, xF, yI, yF, cx: xF - P.largoEsc / 2 });
       }
-      const avgSup = alzada - P.altoEsc / 2 - P.luzMin;
-      const xRef = steps[0].cx, yRef = steps[0].yI - avgSup;
+      // The step's vertex closest to the troncal is the front lower corner: (xF - largoEsc, yI).
+      // We want the vertical distance from this theoretical vertex to the troncal to be exactly P.luzMin.
+      const xRef = steps[0].xF - P.largoEsc;
+      const yRef = steps[0].yI - P.luzMin;
       const tY = x => yRef - tanA * (x - xRef);
-      // Troncal endpoint (bottom face hits floor)
-      const xEnd = xRef + (yRef - cosA * P.tronA) / tanA;
-      // Troncal trapezoid with VERTICAL end cuts
+      // Troncal is cut horizontally at the floor (y=0)
+      const verticalThickness = P.tronA / cosA;
+      const tY_bottom = x => tY(x) - verticalThickness;
+      const xTopFloor = xRef + yRef / tanA;
+      const xBotFloor = xRef + (yRef - verticalThickness) / tanA;
       const TC = [
         [0, tY(0)],  // TL
-        [xEnd, tY(xEnd)],  // TR
-        [xEnd, 0],  // BR (floor)
-        [0, tY(0) - cosA * P.tronA],  // BL
+        [xTopFloor, 0],  // TR (floor)
+        [xBotFloor, 0],  // BR (floor)
+        [0, tY_bottom(0)],  // BL
       ];
-      const longTronc = Math.hypot(xEnd, tY(0) - 0);
-      // Soporte llega hasta la base de la chapa (yI + embutido), no la base de la madera (yI)
-      const sopTop = P.embutido; // offset extra que acorta el soporte
-      const corta = avgSup - sopTop - P.sopA / 2 * tanA;
-      const larga = avgSup - sopTop + P.sopA / 2 * tanA;
-      return { alzada, pedada, ang, cosA, sinA, tanA, blondel, steps, tY, TC, xEnd, longTronc, corta, larga, avgSup };
+      const longTronc = Math.hypot(xTopFloor, tY(0) - 0);
+      // Soporte llega hasta la base de la chapa (yI + embutido - chapaE), no la base de la madera (yI)
+      const chw = P.chapaL / 2;
+      // The chapa bottom is at s.yI + P.embutido - P.chapaE. 
+      // Left side of soporte is at sopL = s.cx - chw.
+      // Top of left side is chapaBot, bottom is tY(sopL).
+      // Since all steps are linearly aligned relative to troncal, we can compute corta and larga once.
+      const s0 = steps[0];
+      const chapaBot0 = s0.yI + P.embutido - P.chapaE;
+      const sopL0 = s0.cx - chw;
+      const sopR0 = sopL0 + P.sopA;
+      const corta = chapaBot0 - tY(sopL0);
+      const larga = chapaBot0 - tY(sopR0);
+      return { alzada, pedada, ang, cosA, sinA, tanA, blondel, steps, tY, TC, longTronc, corta, larga };
     }
 
     // ════════════════════════════════════════════════════════
@@ -1150,11 +1404,14 @@
       const { steps, tY, corta, larga } = d;
       const hw = P.sopA / 2, chw = P.chapaL / 2;
       steps.forEach((s, i) => {
-        if (i === P.nSteps - 1) return;
         const isH = i === hovStep, isSel = i === selStep;
-        const chapaBot = s.yI + P.embutido;
-        // Soporte trapezoid — top meets chapa bottom, not wood bottom
-        const pts = [[s.cx - hw, chapaBot], [s.cx + hw, chapaBot], [s.cx + hw, tY(s.cx + hw)], [s.cx - hw, tY(s.cx - hw)]];
+        const isFloor = i === P.nSteps - 1;
+        const chapaBot = s.yI + P.embutido - P.chapaE;
+        // Soporte trapezoid — left edge at chapa left edge
+        const sopL = s.cx - chw, sopR = sopL + P.sopA;
+        const subY_L = isFloor ? 0 : tY(sopL);
+        const subY_R = isFloor ? 0 : tY(sopR);
+        const pts = [[sopL, chapaBot], [sopR, chapaBot], [sopR, subY_R], [sopL, subY_L]];
         c.save();
         c.beginPath(); const [sp0x, sp0y] = w2s(pts[0][0], pts[0][1]); c.moveTo(sp0x, sp0y);
         for (let k = 1; k < 4; k++) { const [sx, sy] = w2s(pts[k][0], pts[k][1]); c.lineTo(sx, sy); }
@@ -1162,15 +1419,18 @@
         c.fillStyle = isH || isSel ? 'rgba(0,80,130,.65)' : 'rgba(0,160,240,.1)'; c.fill();
         c.strokeStyle = isSel ? '#00d4f5' : isH ? 'rgba(0,200,255,.8)' : 'rgba(0,180,255,.5)';
         c.lineWidth = isH || isSel ? 2 : 1; c.stroke();
-        const [cxt, cyt] = w2s(s.cx, chapaBot), [cxb, cyb] = w2s(s.cx, tY(s.cx));
+        const sopMid = sopL + P.sopA / 2;
+        const [cxt, cyt] = w2s(sopMid, chapaBot), [cxb, cyb] = w2s(sopMid, isFloor ? 0 : tY(sopMid));
         c.strokeStyle = 'rgba(0,180,255,.18)'; c.lineWidth = 1; c.setLineDash([2, 3]);
         c.beginPath(); c.moveTo(cxt, cyt); c.lineTo(cxb, cyb); c.stroke(); c.setLineDash([]);
         if (isH) {
           c.fillStyle = '#00d4f5'; c.font = 'bold 10px Share Tech Mono';
-          const [blx, bly] = w2s(s.cx - hw - 8 / T.sc, (chapaBot + tY(s.cx - hw)) / 2);
-          const [brx, bry] = w2s(s.cx + hw + 4 / T.sc, (chapaBot + tY(s.cx + hw)) / 2);
-          c.textAlign = 'right'; c.fillText('C:' + corta.toFixed(1), blx, bly);
-          c.textAlign = 'left'; c.fillText('L:' + larga.toFixed(1), brx, bry); c.textAlign = 'start';
+          const [blx, bly] = w2s(sopL - 8 / T.sc, (chapaBot + subY_L) / 2);
+          const [brx, bry] = w2s(sopR + 4 / T.sc, (chapaBot + subY_R) / 2);
+          const c_txt = isFloor ? chapaBot.toFixed(1) : corta.toFixed(1);
+          const l_txt = isFloor ? chapaBot.toFixed(1) : larga.toFixed(1);
+          c.textAlign = 'right'; c.fillText('C:' + c_txt, blx, bly);
+          c.textAlign = 'left'; c.fillText('L:' + l_txt, brx, bry); c.textAlign = 'start';
         }
         c.restore();
         // Chapa: embedded inside step wood.
@@ -1199,12 +1459,13 @@
         if (isH) { fill = 'rgba(0,40,70,.95)'; stroke = 'rgba(0,212,245,.9)'; }
         if (isSel) { fill = 'rgba(0,30,60,.95)'; stroke = '#00d4f5'; }
         c.save();
-        // Draw step with notch (embutido) for non-last steps
-        if (i < P.nSteps - 1 && P.embutido > 0) {
-          const chapaBot = s.yI + P.embutido;
+        // Draw step with notch (embutido)
+        if (P.embutido > 0) {
+          const chapaBot = s.yI + P.embutido - P.chapaE;
+          const chapaTop = chapaBot + P.chapaE;
           const [nL,] = w2s(s.cx - chw, 0);  // notch left X
           const [nR,] = w2s(s.cx + chw, 0);  // notch right X
-          const [, nY] = w2s(0, chapaBot);   // notch top Y (screen)
+          const [, nY] = w2s(0, chapaTop);   // notch top Y (screen)
           // Path: rectangle with U-notch at bottom
           c.beginPath();
           c.moveTo(sx1, sy1);            // top-left
@@ -1372,10 +1633,14 @@
       c.restore();
 
       // ─ Soporte ───────────────────────────────────────────
-      if (idx < P.nSteps - 1) {
-        const chapaBot = s.yI + P.embutido;
-        // Soporte top meets chapa bottom
-        const sop = [[s.cx - hw, chapaBot], [s.cx + hw, chapaBot], [s.cx + hw, tY(s.cx + hw)], [s.cx - hw, tY(s.cx - hw)]];
+      {
+        const isFloor = idx === P.nSteps - 1;
+        const chapaBot = s.yI + P.embutido - P.chapaE;
+        // Soporte left edge at chapa left edge
+        const sopL = s.cx - chw, sopR = sopL + P.sopA;
+        const subY_L = isFloor ? 0 : tY(sopL);
+        const subY_R = isFloor ? 0 : tY(sopR);
+        const sop = [[sopL, chapaBot], [sopR, chapaBot], [sopR, subY_R], [sopL, subY_L]];
         c.save();
         c.beginPath(); const [sp0x, sp0y] = w2s(sop[0][0], sop[0][1]); c.moveTo(sp0x, sp0y);
         for (let k = 1; k < 4; k++) { const [sx2, sy2] = w2s(sop[k][0], sop[k][1]); c.lineTo(sx2, sy2); }
@@ -1397,11 +1662,12 @@
       // ─ Escalón (con muesca embutido) ────────────────────
       const [estx1, esty1] = w2s(s.xI, s.yF), [estx2, esty2] = w2s(s.xF, s.yI);
       c.save();
-      if (idx < P.nSteps - 1 && P.embutido > 0) {
-        const cBot = s.yI + P.embutido;
+      if (P.embutido > 0) {
+        const cBot = s.yI + P.embutido - P.chapaE;
+        const cTop = cBot + P.chapaE;
         const [nL,] = w2s(s.cx - chw, 0);
         const [nR,] = w2s(s.cx + chw, 0);
-        const [, nY] = w2s(0, cBot);
+        const [, nY] = w2s(0, cTop);
         c.beginPath();
         c.moveTo(estx1, esty1);
         c.lineTo(estx2, esty1);
@@ -1480,23 +1746,30 @@
       // 3. Pedada label
       dimH(s.xI, s.xF, s.yF, 'pedada: ' + Math.round(s.xF - s.xI) + ' mm', CYN, -1);
 
-      if (idx < P.nSteps - 1) {
-        const chapaBot = s.yI + P.embutido;
+      {
+        const isFloor = idx === P.nSteps - 1;
+        const chapaBot = s.yI + P.embutido - P.chapaE;
         const chapaTop = chapaBot + P.chapaE;
         // 4. Chapa largo (at top face of chapa)
         dimH(s.cx - chw, s.cx + chw, chapaTop, 'chapa: ' + P.chapaL + ' mm', CHP, -1);
         // 5. Chapa espesor (right side)
         dimV(s.cx + chw, chapaBot, chapaTop, 'e=' + P.chapaE, CHP, 1);
-        // 5b. Embutido depth — distance from step bottom face to chapa bottom
-        dimV(s.cx - chw - 2, s.yI, chapaBot, 'emb=' + P.embutido, CHP, -1);
+        // 5b. Embutido depth — distance from step bottom face to chapa top
+        dimV(s.cx - chw - 2, s.yI, chapaTop, 'emb=' + P.embutido, CHP, -1);
         // 6. Soporte ancho A
-        dimH(s.cx - hw, s.cx + hw, tY(s.cx), 'sopA: ' + P.sopA + ' mm', SOP, 1);
-        // 7. Corta (left side of soporte) — from chapa bottom to troncal
-        dimV(s.cx - hw, chapaBot, tY(s.cx - hw), 'C=' + corta.toFixed(1), SOP, -1);
-        // 8. Larga (right side of soporte) — from chapa bottom to troncal
-        dimV(s.cx + hw, chapaBot, tY(s.cx + hw), 'L=' + larga.toFixed(1), SOP, 1);
-        // 9. Luz mínima
-        lbl(s.cx, chapaBot, 'luz: ' + P.luzMin + ' mm', TRN, 4, -4);
+        const sopL = s.cx - chw, sopR = sopL + P.sopA;
+        const sopMid = sopL + P.sopA / 2;
+        const subY_L = isFloor ? 0 : tY(sopL);
+        const subY_R = isFloor ? 0 : tY(sopR);
+        dimH(sopL, sopR, isFloor ? 0 : tY(sopMid), 'sopA: ' + P.sopA + ' mm', SOP, 1);
+        // 7. Corta (left side of soporte)
+        dimV(sopL, chapaBot, subY_L, 'C=' + (isFloor ? chapaBot.toFixed(1) : corta.toFixed(1)), SOP, -1);
+        // 8. Larga (right side of soporte)
+        dimV(sopR, chapaBot, subY_R, 'L=' + (isFloor ? chapaBot.toFixed(1) : larga.toFixed(1)), SOP, 1);
+        if (!isFloor) {
+          // 9. Luz mínima
+          lbl(sopMid, chapaBot, 'luz: ' + P.luzMin + ' mm', TRN, 4, -4);
+        }
       }
 
       // 10. Troncal height A
@@ -1600,8 +1873,8 @@
         if (i === hovStep) tr.classList.add('hov');
         if (i === selStep) tr.classList.add('sel');
         tr.innerHTML = `<td>${s.num}</td><td>${Math.round(s.cx)}</td>` +
-          `<td>${i < P.nSteps - 1 ? corta.toFixed(1) : '—'}</td>` +
-          `<td>${i < P.nSteps - 1 ? larga.toFixed(1) : '—'}</td>` +
+          `<td>${i < P.nSteps - 1 ? corta.toFixed(1) : (steps[P.nSteps - 1].yI + P.embutido - P.chapaE).toFixed(1)}</td>` +
+          `<td>${i < P.nSteps - 1 ? larga.toFixed(1) : (steps[P.nSteps - 1].yI + P.embutido - P.chapaE).toFixed(1)}</td>` +
           `<td style="color:${ok ? 'var(--green)' : 'var(--amber)'}">${libre}</td>`;
         tr.addEventListener('mouseenter', () => { hovStep = i; draw(); });
         tr.addEventListener('mouseleave', () => { hovStep = -1; draw(); });
